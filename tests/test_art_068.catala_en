@@ -1,0 +1,114 @@
+> Using Art_068
+
+# Tests: artigo 68.º do CIRS, 2025
+
+```catala
+declaration imposto_2025 content money
+  depends on rendimento_coletavel content money
+  equals
+    (output of Art_068.TaxasGerais with {
+      -- ano: 2025
+      -- rendimento_coletavel: rendimento_coletavel
+    }).imposto
+```
+
+## Values worked out from the law
+
+Each expected value was computed from n.º 1 and n.º 2 with exact arithmetic and
+rounded once to the cent. None of them lands on half a cent, so the rounding
+rule for ties doesn't affect them. The cases cover each bracket, every bracket
+limit, and one cent below €44 987, where the tax drops.
+
+```catala
+declaration structure Caso:
+  data rendimento_coletavel content money
+  data imposto content money
+
+#[test]
+declaration scope TesteValores2025:
+  internal casos content list of Caso
+  output calculado content list of money
+
+scope TesteValores2025:
+  definition casos equals [
+    Caso { -- rendimento_coletavel: $0          -- imposto: $0 };
+    Caso { -- rendimento_coletavel: $5,000      -- imposto: $625.00 };
+    Caso { -- rendimento_coletavel: $8,058      -- imposto: $1,007.25 };
+    Caso { -- rendimento_coletavel: $12,160     -- imposto: $1,663.49 };
+    Caso { -- rendimento_coletavel: $12,161     -- imposto: $1,663.70 };
+    Caso { -- rendimento_coletavel: $15,000     -- imposto: $2,274.09 };
+    Caso { -- rendimento_coletavel: $17,233     -- imposto: $2,754.18 };
+    Caso { -- rendimento_coletavel: $20,000     -- imposto: $3,429.33 };
+    Caso { -- rendimento_coletavel: $22,306     -- imposto: $3,992.10 };
+    Caso { -- rendimento_coletavel: $25,000     -- imposto: $4,838.02 };
+    Caso { -- rendimento_coletavel: $28,400     -- imposto: $5,905.50 };
+    Caso { -- rendimento_coletavel: $35,000     -- imposto: $8,208.90 };
+    Caso { -- rendimento_coletavel: $41,629     -- imposto: $10,522.56 };
+    Caso { -- rendimento_coletavel: $43,000     -- imposto: $11,113.46 };
+    Caso { -- rendimento_coletavel: $44,986.99  -- imposto: $11,969.86 };
+    Caso { -- rendimento_coletavel: $44,987     -- imposto: $11,969.69 };
+    Caso { -- rendimento_coletavel: $60,000     -- imposto: $18,665.49 };
+    Caso { -- rendimento_coletavel: $83,696     -- imposto: $29,234.18 };
+    Caso { -- rendimento_coletavel: $100,000    -- imposto: $37,060.10 };
+    Caso { -- rendimento_coletavel: $250,000    -- imposto: $109,060.10 }
+  ]
+
+  definition calculado equals
+    map each c among casos to imposto_2025 of c.rendimento_coletavel
+
+  assertion (for all (c, v) among (casos, calculado) we have v = c.imposto)
+```
+
+## Cross-check against AT's "parcela a abater" table
+
+This table comes from AT's leaflet "Taxas aplicáveis 2025", independently of
+the table in the law. Away from the bracket limits the two methods agree to
+within a cent, so the incomes below avoid the limits themselves.
+
+```catala
+declaration structure LinhaParcela:
+  data de_mais_de content money
+  data taxa content decimal
+  data parcela_a_abater content money
+
+declaration tabela_at_2025 content list of LinhaParcela equals [
+  LinhaParcela { -- de_mais_de: $0      -- taxa: 12.5% -- parcela_a_abater: $0 };
+  LinhaParcela { -- de_mais_de: $8,059  -- taxa: 16%   -- parcela_a_abater: $282.07 };
+  LinhaParcela { -- de_mais_de: $12,160 -- taxa: 21.5% -- parcela_a_abater: $950.91 };
+  LinhaParcela { -- de_mais_de: $17,233 -- taxa: 24.4% -- parcela_a_abater: $1,450.67 };
+  LinhaParcela { -- de_mais_de: $22,306 -- taxa: 31.4% -- parcela_a_abater: $3,011.98 };
+  LinhaParcela { -- de_mais_de: $28,400 -- taxa: 34.9% -- parcela_a_abater: $4,006.10 };
+  LinhaParcela { -- de_mais_de: $41,629 -- taxa: 43.1% -- parcela_a_abater: $7,419.54 };
+  LinhaParcela { -- de_mais_de: $44,987 -- taxa: 44.6% -- parcela_a_abater: $8,094.51 };
+  LinhaParcela { -- de_mais_de: $83,696 -- taxa: 48%   -- parcela_a_abater: $10,939.90 }
+]
+
+declaration imposto_parcela_2025 content money
+  depends on rendimento_coletavel content money
+  equals
+    let linha equals
+      content of l
+      among (list of x among tabela_at_2025 such that x.de_mais_de < rendimento_coletavel)
+      such that l.de_mais_de is maximum
+    in
+    (money of ((decimal of rendimento_coletavel) * linha.taxa)) - linha.parcela_a_abater
+
+#[test]
+declaration scope TesteParcelaAAbater2025:
+  internal rendimentos content list of money
+  output diferencas content list of money
+
+scope TesteParcelaAAbater2025:
+  definition rendimentos equals [
+    $2; $4,000; $8,058.99; $8,059.01; $10,000; $12,159; $12,160.01; $14,000;
+    $17,232; $17,233.01; $20,000; $22,305; $22,306.01; $25,000; $28,399;
+    $28,400.01; $35,000; $41,628; $41,629.01; $43,000; $44,986; $44,987.01;
+    $60,000; $83,695; $83,696.01; $100,000; $250,000; $1,000,000
+  ]
+
+  definition diferencas equals
+    map each r among rendimentos to
+      (imposto_2025 of r) - (imposto_parcela_2025 of r)
+
+  assertion (for all d among diferencas we have d >= -$0.01 and d <= $0.01)
+```

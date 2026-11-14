@@ -1,0 +1,8 @@
+[project]
+include_dirs = ["cirs", "tests"]
+
+[[target]]
+name = "irs"
+modules = ["Art_068"]
+tests = ["tests"]
+backends = ["ocaml"]

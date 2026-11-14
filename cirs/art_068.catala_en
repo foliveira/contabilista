@@ -1,0 +1,124 @@
+> Module Art_068
+
+# Código do IRS
+
+## Capítulo III: Taxas
+
+### Artigo 68.º: Taxas gerais
+
+Note: this is the wording that applies to 2025 income. N.º 1 is worded as in
+Lei n.º 55-A/2025, de 22 de julho, which AT's leaflet "Taxas aplicáveis 2025"
+applies to the whole of 2025. N.º 2 is worded as in Lei n.º 45-A/2024, de 31 de
+dezembro.
+
+```catala-metadata
+declaration structure Escalao:
+  data limite content money
+  data taxa_normal content decimal
+  data taxa_media content decimal
+
+declaration scope TaxasGerais:
+  input ano content integer
+  input rendimento_coletavel content money
+  internal escaloes content list of Escalao
+  internal taxa_normal_ultimo_escalao content decimal
+  internal primeiro_escalao content Escalao
+  output imposto content money
+```
+
+#### N.º 1
+
+1 - As taxas do imposto são as constantes da tabela seguinte:
+
+| Rendimento coletável (euros)  | Taxa normal (A) | Taxa média (B) |
+|-------------------------------|-----------------|----------------|
+| Até 8 059                     | 12,50           | 12,500         |
+| De mais de 8 059 até 12 160   | 16,00           | 13,680         |
+| De mais de 12 160 até 17 233  | 21,50           | 15,982         |
+| De mais de 17 233 até 22 306  | 24,40           | 17,897         |
+| De mais de 22 306 até 28 400  | 31,40           | 20,794         |
+| De mais de 28 400 até 41 629  | 34,90           | 25,277         |
+| De mais de 41 629 até 44 987  | 43,10           | 26,607         |
+| De mais de 44 987 até 83 696  | 44,60           | 34,929         |
+| Superior a 83 696             | 48,00           |                |
+
+Note: each row below is one row of the table, with its upper limit. The last
+row has no limit and no column B rate, so only its column A rate is kept.
+
+```catala
+scope TaxasGerais:
+  definition escaloes under condition ano = 2025 consequence equals [
+    Escalao { -- limite: $8,059  -- taxa_normal: 12.5% -- taxa_media: 12.500% };
+    Escalao { -- limite: $12,160 -- taxa_normal: 16%   -- taxa_media: 13.680% };
+    Escalao { -- limite: $17,233 -- taxa_normal: 21.5% -- taxa_media: 15.982% };
+    Escalao { -- limite: $22,306 -- taxa_normal: 24.4% -- taxa_media: 17.897% };
+    Escalao { -- limite: $28,400 -- taxa_normal: 31.4% -- taxa_media: 20.794% };
+    Escalao { -- limite: $41,629 -- taxa_normal: 34.9% -- taxa_media: 25.277% };
+    Escalao { -- limite: $44,987 -- taxa_normal: 43.1% -- taxa_media: 26.607% };
+    Escalao { -- limite: $83,696 -- taxa_normal: 44.6% -- taxa_media: 34.929% }
+  ]
+
+  definition taxa_normal_ultimo_escalao under condition ano = 2025
+  consequence equals 48%
+
+  definition primeiro_escalao equals
+    content of e among escaloes such that e.limite is minimum
+
+  assertion (rendimento_coletavel >= $0)
+```
+
+Note: n.º 1 on its own covers income within the first bracket, where the
+whole amount is taxed at that bracket's rate. Above it, n.º 2 applies.
+
+```catala
+scope TaxasGerais:
+  definition imposto
+  under condition rendimento_coletavel <= primeiro_escalao.limite
+  consequence equals
+    money of ((decimal of rendimento_coletavel) * primeiro_escalao.taxa_normal)
+```
+
+#### N.º 2
+
+2 - O quantitativo do rendimento coletável, quando superior a 8059 €, é
+dividido em duas partes, nos seguintes termos: uma, igual ao limite do maior
+dos escalões que nele couber, à qual se aplica a taxa da coluna B
+correspondente a esse escalão; outra, igual ao excedente, a que se aplica a
+taxa da coluna A respeitante ao escalão imediatamente superior.
+
+Note: the law doesn't say how to round. The code adds the two parts exactly
+and rounds once to the cent. Catala rounds half away from zero.
+
+Note: AT publishes the same table as "taxa × rendimento − parcela a abater",
+with each parcela derived from column B. Away from the bracket limits the two
+methods agree to within a cent. When the income equals a limit exactly, this
+paragraph applies that bracket's own column B rate, which was rounded to three
+decimals, so the result differs from AT's table by up to €0.27 (at €83 696).
+It also makes the tax drop at some limits: €11 969,86 at €44 986,99 but
+€11 969,69 at €44 987,00. The code follows the text. Which result AT's system
+gives is to be checked against the simulator.
+
+```catala
+scope TaxasGerais:
+  definition imposto
+  under condition rendimento_coletavel > $8,059
+  consequence equals
+    let maior_escalao_que_cabe equals
+      content of e
+      among (list of x among escaloes such that x.limite <= rendimento_coletavel)
+      such that e.limite is maximum
+    in
+    let escaloes_acima equals
+      list of x among escaloes such that x.limite > maior_escalao_que_cabe.limite
+    in
+    let taxa_escalao_imediatamente_superior equals
+      if number of escaloes_acima = 0
+      then taxa_normal_ultimo_escalao
+      else (content of e among escaloes_acima such that e.limite is minimum).taxa_normal
+    in
+    let excedente equals rendimento_coletavel - maior_escalao_que_cabe.limite in
+    money of (
+      (decimal of maior_escalao_que_cabe.limite) * maior_escalao_que_cabe.taxa_media
+      + (decimal of excedente) * taxa_escalao_imediatamente_superior
+    )
+```
