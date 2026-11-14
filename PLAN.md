@@ -51,9 +51,15 @@ The milestone is done when:
 ## Testing
 
 - Each article has unit tests with values worked out by hand.
-- Art. 68 n.º 2 taxes income up to the last full bracket at the column B average rate, which the law rounds to three decimals. AT derives its "parcela a abater" table from column B, so the two methods agree to within a cent and the parcela table is an independent check. A plain marginal calculation differs by a few cents (third bracket: €950.91 from column B, €950.87 marginal), so it is not used as a reference.
+- Art. 68 n.º 2 taxes income up to the last full bracket at the column B average rate, which the law rounds to three decimals. AT derives its "parcela a abater" table from column B, so the two methods agree to within a cent everywhere except at the bracket limits. When income equals a limit exactly, n.º 2 applies that bracket's own rounded column B rate and the parcela table doesn't, so the results differ by up to €0.27 (at €83,696). The parcela table is an independent check away from the limits. A plain marginal calculation differs by a few cents (third bracket: €950.91 from column B, €950.87 marginal), so it is not used as a reference.
 - End-to-end cases are checked against AT's 2025 IRS simulator on Portal das Finanças.
 - A sweep over a fixed set of household profiles computes net income at every euro up to €500,000 and flags any point where net income drops as gross income rises.
+
+## Open questions
+
+- Art. 68 at an exact bracket limit: the code follows n.º 2, which gives a different amount from AT's parcela table and makes the tax drop at some limits (€11,969.86 at €44,986.99, €11,969.69 at €44,987.00). Check what AT's simulator gives at €12,160, €44,987 and €83,696.
+- Rounding: the law doesn't say how to round the result of art. 68. Under n.º 2, every whole-euro income in the second bracket gives an amount ending in half a cent (€8,059 × 12.5% = €1,007.375). Catala rounds half away from zero, and AT's parcela table gives one cent less. The simulator will show which rule AT applies.
+- For 2026: n.º 2 still says "superior a 8059 €", but the 2026 table's first bracket ends at €8,342.
 
 ## Data
 
