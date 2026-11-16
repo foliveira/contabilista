@@ -2,16 +2,6 @@
 
 # Tests: artigo 68.º do CIRS, 2025
 
-```catala
-declaration imposto_2025 content money
-  depends on rendimento_coletavel content money
-  equals
-    (output of Art_068.TaxasGerais with {
-      -- ano: 2025
-      -- rendimento_coletavel: rendimento_coletavel
-    }).imposto
-```
-
 ## Values worked out from the law
 
 Each expected value was computed from n.º 1 and n.º 2 with exact arithmetic and
@@ -45,7 +35,7 @@ scope TesteValores2025:
     Caso { -- rendimento_coletavel: $35,000     -- imposto: $8,208.90 };
     Caso { -- rendimento_coletavel: $41,629     -- imposto: $10,522.56 };
     Caso { -- rendimento_coletavel: $43,000     -- imposto: $11,113.46 };
-    Caso { -- rendimento_coletavel: $44,986.99  -- imposto: $11,969.86 };
+    Caso { -- rendimento_coletavel: $44,986.99   -- imposto: $11,969.86 };
     Caso { -- rendimento_coletavel: $44,987     -- imposto: $11,969.69 };
     Caso { -- rendimento_coletavel: $60,000     -- imposto: $18,665.49 };
     Caso { -- rendimento_coletavel: $83,696     -- imposto: $29,234.18 };
@@ -54,9 +44,20 @@ scope TesteValores2025:
   ]
 
   definition calculado equals
-    map each c among casos to imposto_2025 of c.rendimento_coletavel
+    map each c among casos to
+      (output of Art_068.TaxasGerais with {
+        -- ano: 2025
+        -- rendimento_coletavel: c.rendimento_coletavel
+      }).imposto
 
-  assertion (for all (c, v) among (casos, calculado) we have v = c.imposto)
+  assertion
+    (for all c among casos we have
+      let v equals
+        (output of Art_068.TaxasGerais with {
+          -- ano: 2025
+          -- rendimento_coletavel: c.rendimento_coletavel
+        }).imposto in
+      v = c.imposto)
 ```
 
 ## Cross-check against AT's "parcela a abater" table
@@ -83,16 +84,6 @@ declaration tabela_at_2025 content list of LinhaParcela equals [
   LinhaParcela { -- de_mais_de: $83,696 -- taxa: 48%   -- parcela_a_abater: $10,939.90 }
 ]
 
-declaration imposto_parcela_2025 content money
-  depends on rendimento_coletavel content money
-  equals
-    let linha equals
-      content of l
-      among (list of x among tabela_at_2025 such that x.de_mais_de < rendimento_coletavel)
-      such that l.de_mais_de is maximum
-    in
-    (money of ((decimal of rendimento_coletavel) * linha.taxa)) - linha.parcela_a_abater
-
 #[test]
 declaration scope TesteParcelaAAbater2025:
   internal rendimentos content list of money
@@ -108,7 +99,17 @@ scope TesteParcelaAAbater2025:
 
   definition diferencas equals
     map each r among rendimentos to
-      (imposto_2025 of r) - (imposto_parcela_2025 of r)
+      let imposto_n2 equals
+        (output of Art_068.TaxasGerais with {
+          -- ano: 2025
+          -- rendimento_coletavel: r
+        }).imposto in
+      let linha equals
+        content of l
+        among (list of x among tabela_at_2025 such that x.de_mais_de < r)
+        such that l.de_mais_de is maximum in
+      imposto_n2
+      - ((money of ((decimal of r) * linha.taxa)) - linha.parcela_a_abater)
 
   assertion (for all d among diferencas we have d >= -$0.01 and d <= $0.01)
 ```

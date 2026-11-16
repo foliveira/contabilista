@@ -77,3 +77,16 @@ clerk --version
 ```
 
 For the VS Code extension (`catalalang.catala`), also install `catala-lsp.1.3.0`.
+
+Two notes from setting this up on a machine without root apt access:
+
+- `clerk` is not on opam. It is built from the Catala repository, at the tag
+  matching the compiler (`git clone --branch 1.3.0`, then
+  `dune build build_system/clerk.exe`, then copy `_build/default/build_system/clerk.exe`
+  somewhere on PATH). It also needs `ninja` on PATH at runtime.
+- `catala` depends on `zarith`, whose build needs the GMP headers (`libgmp-dev`).
+  Without root, GMP (and `m4`, which GMP's `configure` needs) build from source
+  into `~/.local`, with `C_INCLUDE_PATH`/`LIBRARY_PATH`/`LD_LIBRARY_PATH` pointing
+  there. On that machine `mise.toml` pins `opam` and `ninja`, and its `test` task
+  wires the opam switch in, so `mise run test` is the one-command way to run
+  the tests.

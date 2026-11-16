@@ -4,12 +4,12 @@ The Portuguese personal income tax code (Código do IRS) written as a program in
 
 Each file holds the text of one article of the law, in Portuguese, with the code for that article right under it. You can run the tax calculation, test it, and check each line of code against the law it comes from.
 
-## Status
+## Status of this repository
 
 This project has just started.
 
 - Article 68 (the general tax rates) for income earned in 2025 is written, with tests.
-- The code has not been compiled yet.
+- The code compiles and the tests pass under Catala 1.3.0 (`clerk test`: 2/2 interpreted tests).
 - No result has been compared with the tax authority's (AT) simulator yet.
 
 Do not use this to file a tax return or to give tax advice.

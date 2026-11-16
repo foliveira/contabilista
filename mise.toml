@@ -1,0 +1,22 @@
+[tools]
+ninja = "latest"
+opam = { version = "2.6.1", asset_pattern = "opam-*-{gnu_arch}-{os}" }
+
+# zarith (and Catala programs compiled to OCaml) link against GMP, whose
+# headers and libraries were built from source into ~/.local because this
+# machine has no root apt access. The catala compiler itself lives in the
+# opam switch ~/.opam/4.14.2, and clerk (not distributed by opam) was built
+# from CatalaLang/catala, tag 1.3.0, into ~/.local/bin. All of that is
+# wired together by the task below.
+[env]
+C_INCLUDE_PATH = "{{ env.HOME }}/.local/include"
+LIBRARY_PATH = "{{ env.HOME }}/.local/lib"
+LD_LIBRARY_PATH = "{{ env.HOME }}/.local/lib"
+
+[tasks.test]
+description = "Build and run the Catala tests with clerk (needs mise + the opam 4.14.2 switch)"
+run = """
+eval "$(opam env --switch=4.14.2)"
+export PATH="$HOME/.local/bin:$PATH"
+exec clerk test
+"""
