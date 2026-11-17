@@ -6,10 +6,9 @@ Each file holds the text of one article of the law, in Portuguese, with the code
 
 ## Status
 
-This project has just started.
-
-- Article 68 (the general tax rates) for income earned in 2025 is written, with tests.
-- The code has not been compiled yet.
+- Articles 25 and 53 (employment and pension deductions) and article 68
+  (general tax rates) for income earned in 2025 are implemented, with tests.
+- All four test scopes pass under Catala 1.3.0, and the OCaml target builds.
 - No result has been compared with the tax authority's (AT) simulator yet.
 
 Do not use this to file a tax return or to give tax advice.
@@ -53,6 +52,8 @@ clerk run tests/test_art_068.catala_en --scope=TesteValores2025
 - Names in the code are Portuguese words without accents, such as `rendimento_coletavel`, so they match the words in the law.
 - Catala keywords are in English, because Catala has no Portuguese version.
 - The tax year is an input. Only 2025 exists so far. Any other year stops with an error instead of giving a wrong number.
+- Deductions are calculated per income holder. Expense eligibility is supplied
+  by the caller; non-qualifying annuities are outside the pension scope.
 - When the law says how to work something out, the code does exactly that, even when a simpler formula gives almost the same number.
 
 ## Sources

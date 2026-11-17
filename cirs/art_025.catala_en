@@ -1,0 +1,137 @@
+> Module Art_025
+
+# Código do IRS
+
+## Capítulo II: Determinação do rendimento coletável
+
+### Artigo 25.º: Rendimentos do trabalho dependente: deduções
+
+Note: wording applicable to 2025, including Lei n.º 45-A/2024, de 31 de
+ dezembro (n.º 1 a) and revocation of n.º 7), and Lei n.º 82/2023, de 29 de
+ dezembro (n.º 1 c)). Sources:
+
+- [Lei n.º 45-A/2024](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Lei_45_A_2024.pdf)
+- [AT, artigo 25.º](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs25.aspx)
+- Portaria n.º 6-B/2025/1, de 6 de janeiro: IAS for 2025 is €522.50.
+
+One call is for one income holder's annual category A income, not one employer
+or one household. Eligibility of expenses is an input, not a legal judgement
+made by this model. The indemnity input must already satisfy n.º 1 b); union
+dues must exclude the benefits listed in n.º 1 c); professional dues must
+satisfy n.º 4. All inputs are non-negative amounts actually borne by the holder.
+
+```catala-metadata
+declaration scope LimitesDeducao:
+  input ano content integer
+  internal ias content money
+  output deducao_base content money
+  output limite_ordens content money
+
+declaration scope DeducaoTrabalho:
+  input ano content integer
+  input rendimento_bruto content money
+  input contribuicoes_obrigatorias content money
+  input indemnizacoes_elegiveis content money
+  input quotizacoes_sindicais_elegiveis content money
+  input quotizacoes_ordens_elegiveis content money
+  internal limites content LimitesDeducao
+  internal deducao_alinea_a content money
+  internal deducao_sindical content money
+  output deducao content money
+  output rendimento_liquido content money
+```
+
+#### N.º 1
+
+1 - Aos rendimentos brutos da categoria A deduzem-se, até à sua concorrência,
+e por cada titular que os tenha auferido, os seguintes montantes:
+
+a) 8,54 vezes o valor do IAS;
+
+```catala
+scope LimitesDeducao:
+  definition ias under condition ano = 2025 consequence equals $522.50
+  definition deducao_base equals money of ((decimal of ias) * 8.54)
+
+scope DeducaoTrabalho:
+  definition limites equals output of LimitesDeducao with { -- ano: ano }
+  assertion (rendimento_bruto >= $0)
+  assertion (contribuicoes_obrigatorias >= $0)
+  assertion (indemnizacoes_elegiveis >= $0)
+  assertion (quotizacoes_sindicais_elegiveis >= $0)
+  assertion (quotizacoes_ordens_elegiveis >= $0)
+```
+
+b) As indemnizações pagas pelo trabalhador à sua entidade patronal por
+rescisão unilateral do contrato individual de trabalho sem aviso prévio em
+resultado de sentença judicial ou de acordo judicialmente homologado ou, nos
+restantes casos, a indemnização de valor não superior à remuneração de base
+correspondente ao aviso prévio;
+
+c) As quotizações sindicais, na parte em que não constituam contrapartida de
+benefícios de saúde, educação, apoio à terceira idade, habitação, seguros ou
+segurança social e desde que não excedam, em relação a cada sujeito passivo,
+1 % do rendimento bruto desta categoria, sendo acrescidas de 100 %.
+
+Note: cap the eligible dues before doubling them. The 1% ceiling is computed
+as an exact decimal; round the resulting deduction once to the cent.
+
+```catala
+scope DeducaoTrabalho:
+  definition deducao_sindical equals
+    money of (2.0 * (if decimal of quotizacoes_sindicais_elegiveis
+                     <= (decimal of rendimento_bruto) * 1%
+                  then decimal of quotizacoes_sindicais_elegiveis
+                  else (decimal of rendimento_bruto) * 1%))
+
+  definition deducao equals
+    let total equals deducao_alinea_a + indemnizacoes_elegiveis + deducao_sindical in
+    if total <= rendimento_bruto then total else rendimento_bruto
+
+  definition rendimento_liquido equals rendimento_bruto - deducao
+```
+
+#### N.º 2
+
+2 - Se, porém, as contribuições obrigatórias para regimes de proteção social
+e para subsistemas legais de saúde excederem o limite fixado na alínea a) do
+número anterior, aquela dedução é pelo montante total dessas contribuições.
+
+#### N.º 3
+
+3 - (Revogado.)
+
+#### N.º 4
+
+4 - A dedução prevista na alínea a) do n.º 1 pode ser elevada até 75 % de
+12 vezes o valor do IAS desde que a diferença resulte de quotizações para
+ordens profissionais suportadas pelo próprio sujeito passivo e indispensáveis
+ao exercício da respetiva atividade desenvolvida exclusivamente por conta de
+outrem.
+
+Note: the ordinary deduction plus eligible professional dues is capped at
+9 IAS. Mandatory contributions replace the ordinary deduction if higher;
+professional dues are not added on top of that replacement.
+
+```catala
+scope LimitesDeducao:
+  definition limite_ordens equals money of ((decimal of ias) * 12.0 * 75%)
+
+scope DeducaoTrabalho:
+  definition deducao_alinea_a equals
+    let com_ordens equals limites.deducao_base + quotizacoes_ordens_elegiveis in
+    let elevada equals
+      if com_ordens <= limites.limite_ordens then com_ordens else limites.limite_ordens
+    in
+    if contribuicoes_obrigatorias > elevada
+    then contribuicoes_obrigatorias
+    else elevada
+```
+
+#### N.os 5 a 7
+
+5 - (Revogado.)
+
+6 - (Revogado.)
+
+7 - (Revogado.)

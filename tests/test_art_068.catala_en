@@ -2,16 +2,6 @@
 
 # Tests: artigo 68.º do CIRS, 2025
 
-```catala
-declaration imposto_2025 content money
-  depends on rendimento_coletavel content money
-  equals
-    (output of Art_068.TaxasGerais with {
-      -- ano: 2025
-      -- rendimento_coletavel: rendimento_coletavel
-    }).imposto
-```
-
 ## Values worked out from the law
 
 Each expected value was computed from n.º 1 and n.º 2 with exact arithmetic and
@@ -54,7 +44,11 @@ scope TesteValores2025:
   ]
 
   definition calculado equals
-    map each c among casos to imposto_2025 of c.rendimento_coletavel
+    map each c among casos to
+      (output of Art_068.TaxasGerais with {
+        -- ano: 2025
+        -- rendimento_coletavel: c.rendimento_coletavel
+      }).imposto
 
   assertion (for all (c, v) among (casos, calculado) we have v = c.imposto)
 ```
@@ -108,7 +102,10 @@ scope TesteParcelaAAbater2025:
 
   definition diferencas equals
     map each r among rendimentos to
-      (imposto_2025 of r) - (imposto_parcela_2025 of r)
+      (output of Art_068.TaxasGerais with {
+        -- ano: 2025
+        -- rendimento_coletavel: r
+      }).imposto - (imposto_parcela_2025 of r)
 
   assertion (for all d among diferencas we have d >= -$0.01 and d <= $0.01)
 ```

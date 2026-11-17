@@ -1,0 +1,53 @@
+> Using Art_053
+
+# Tests: artigo 53.º do CIRS, 2025
+
+The base deduction is €4,462.15, as in art. 25 n.º 1 a). Each row is one
+holder's eligible pensions only. Cases cover the base and contribution
+thresholds, union dues below/at/above their ceiling, rounding, the gross-income
+cap, and high pensions (no taper following revocation of n.º 8).
+
+```catala
+declaration structure Caso:
+  data bruto content money
+  data contribuicoes content money
+  data sindicato content money
+  data deducao content money
+
+#[test]
+declaration scope TesteDeducaoPensoes2025:
+  internal casos content list of Caso
+  output calculado content list of Art_053.DeducaoPensoes
+
+scope TesteDeducaoPensoes2025:
+  definition casos equals [
+    Caso { -- bruto: $0 -- contribuicoes: $0 -- sindicato: $0 -- deducao: $0 };
+    Caso { -- bruto: $3,000 -- contribuicoes: $0 -- sindicato: $0 -- deducao: $3,000 };
+    Caso { -- bruto: $4,462.14 -- contribuicoes: $0 -- sindicato: $0 -- deducao: $4,462.14 };
+    Caso { -- bruto: $4,462.15 -- contribuicoes: $0 -- sindicato: $0 -- deducao: $4,462.15 };
+    Caso { -- bruto: $4,462.16 -- contribuicoes: $0 -- sindicato: $0 -- deducao: $4,462.15 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $4,462.14 -- sindicato: $0 -- deducao: $4,462.15 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $4,462.15 -- sindicato: $0 -- deducao: $4,462.15 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $4,462.16 -- sindicato: $0 -- deducao: $4,462.16 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $5,000 -- sindicato: $100 -- deducao: $5,200 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $0 -- sindicato: $100 -- deducao: $4,662.15 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $0 -- sindicato: $200 -- deducao: $4,862.15 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $0 -- sindicato: $201 -- deducao: $4,862.15 };
+    Caso { -- bruto: $10,000.25 -- contribuicoes: $0 -- sindicato: $200 -- deducao: $4,662.16 };
+    Caso { -- bruto: $4,500 -- contribuicoes: $0 -- sindicato: $45 -- deducao: $4,500 };
+    Caso { -- bruto: $50,000 -- contribuicoes: $0 -- sindicato: $0 -- deducao: $4,462.15 };
+    Caso { -- bruto: $100,000 -- contribuicoes: $0 -- sindicato: $0 -- deducao: $4,462.15 }
+  ]
+
+  definition calculado equals map each c among casos to
+    output of Art_053.DeducaoPensoes with {
+      -- ano: 2025
+      -- rendimento_bruto: c.bruto
+      -- contribuicoes_obrigatorias: c.contribuicoes
+      -- quotizacoes_sindicais_elegiveis: c.sindicato
+      -- apenas_pensoes_elegiveis: true
+    }
+
+  assertion (for all (c, v) among (casos, calculado) we have
+    v.deducao = c.deducao and v.rendimento_liquido = c.bruto - c.deducao)
+```

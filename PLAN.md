@@ -28,6 +28,15 @@ The milestone is done when:
 - all tests pass under `clerk test`
 - at least 20 hand-built cases give the same result as AT's 2025 IRS simulator, to the cent. The cases cover single and joint filing, A only, H only, A and H together, an income in each bracket, and incomes near the mínimo de existência.
 
+## Implementation progress
+
+- Articles 25, 53 and 68 implemented for 2025; four test scopes pass with
+  Catala 1.3.0 and the OCaml target builds.
+- Articles 25/53 take eligible expenses as inputs and operate per holder.
+  Non-qualifying annuities require art. 54 and are rejected by the pension scope.
+- Next: art. 22, aggregation and taxable income. AT simulator comparisons
+  and the rounding/bracket-limit questions below remain outstanding.
+
 ## Later milestones
 
 2. Categories B (simplified regime, art. 31), E, F and G, including capital gains (art. 43) and the special rates with the option to aggregate (art. 71, 72).
