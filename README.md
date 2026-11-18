@@ -10,7 +10,9 @@ Each file holds the text of one article of the law, in Portuguese, with the code
   (general tax rates) for income earned in 2025 are implemented, with tests.
 - Article 22 n.º 1 aggregates already-deducted A/H income for ordinary resident
   returns; co-ownership/dependent allocation remains a caller responsibility.
-- All six test scopes pass under Catala 1.3.0, and the OCaml target builds.
+- Article 69 applies the joint-filing quotient and doubles the article 68
+  result. Joint-filing eligibility is supplied by the caller.
+- All nine test scopes pass under Catala 1.3.0, and the OCaml target builds.
 - No result has been compared with the tax authority's (AT) simulator yet.
 
 Do not use this to file a tax return or to give tax advice.
@@ -42,7 +44,7 @@ Then, in this folder, run all the tests:
 clerk test
 ```
 
-To check that article 22 rejects unsupported and invalid inputs (requires
+To check that articles 22 and 69 reject unsupported and invalid inputs (requires
 Python 3.9+ and `catala` on PATH):
 
 ```sh

@@ -30,8 +30,8 @@ The milestone is done when:
 
 ## Implementation progress
 
-- Articles 25, 53 and 68, plus art. 22 n.º 1 for ordinary resident A/H
-  returns, implemented for 2025; six test scopes pass with
+- Articles 25, 53, 68 and 69, plus art. 22 n.º 1 for ordinary resident A/H
+  returns, implemented for 2025; nine test scopes pass with
   Catala 1.3.0 and the OCaml target builds.
 - Articles 25/53 take eligible expenses as inputs and operate per holder.
   Non-qualifying annuities require art. 54 and are rejected by the pension scope.
@@ -39,8 +39,11 @@ The milestone is done when:
   Allocation under n.os 2/8 remains a caller responsibility; non-residents,
   special regimes and exempt income affecting the rate are rejected. Separate
   Python-driven Catala checks exercise these guards and invalid amounts/years.
-- Next: art. 69, quociente conjugal. AT simulator comparisons and the
-  rounding/bracket-limit questions below remain outstanding.
+- Art. 69 divides household taxable income by two, applies art. 68 and
+  doubles the result. Tests cover bracket limits, odd cents, input guards
+  and integration with art. 22. Eligibility for joint filing is caller-attested.
+- Next: art. 68-A, taxa adicional de solidariedade. AT simulator comparisons
+  and the rounding/bracket-limit questions below remain outstanding.
 
 ## Later milestones
 
@@ -73,6 +76,11 @@ The milestone is done when:
 
 - Art. 68 at an exact bracket limit: the code follows n.º 2, which gives a different amount from AT's parcela table and makes the tax drop at some limits (€11,969.86 at €44,986.99, €11,969.69 at €44,987.00). Check what AT's simulator gives at €12,160, €44,987 and €83,696.
 - Rounding: the law doesn't say how to round the result of art. 68. Under n.º 2, every whole-euro income in the second bracket gives an amount ending in half a cent (€8,059 × 12.5% = €1,007.375). Catala rounds half away from zero, and AT's parcela table gives one cent less. The simulator will show which rule AT applies.
+- Art. 69 rounding: the current money-valued composition rounds RC / 2 to
+  cents, applies art. 68 with its own cent rounding, then doubles that amount.
+  The law does not prescribe these intermediate rounding steps. Check odd-cent
+  incomes and bracket boundaries against AT before relying on the result;
+  e.g. RC €0.07 currently gives quotient €0.04 and coleta €0.02.
 - For 2026: n.º 2 still says "superior a 8059 €", but the 2026 table's first bracket ends at €8,342.
 
 ## Data

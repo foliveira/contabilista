@@ -8,7 +8,7 @@
 ### Artigo 69.º: Quociente familiar
 
 Note: wording of Lei n.º 7-A/2016, de 30 de março, the one applicable to 2025
-income (no later amendments). Source:
+income, according to the amendment history on the source page. Source:
 [AT, artigo 69.º](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs69.aspx).
 
 Despite the article title, the per-dependent quotient was revoked (old n.º 2).
@@ -16,9 +16,16 @@ What remains is the joint-filing rule: the rates corresponding to half the
 rendimento coletável, with the result doubled. Eligibility (married and not
 judicially separated, or união de facto) and the option for joint taxation
 are facts the caller attests through the input condition below; this scope
-performs no eligibility check of its own.
+performs no eligibility check of its own. A false input is rejected, not
+interpreted as separate filing; use art. 68 directly for separate filing.
 
-Rounding: the composition is literal. Artigo 68 is applied to the quotient
+Supply the household's total taxable income (e.g. from art. 22), not a
+per-holder amount. This scope covers ordinary resident taxation without
+exempt income requiring the rate allocation under art. 22 n.os 4/7.
+The output `imposto` is the general-rate coleta before solidarity tax,
+minimum-existence adjustments and tax credits, not the final amount payable.
+
+Rounding: the implementation composes the existing money-valued scopes. Artigo 68 is applied to the quotient
 with its own convention of rounding once, to the cent, and the result is
 then doubled exactly. When the rendimento coletável has an odd number of
 cents, the quotient itself is rounded to a cent, because the money type
@@ -43,6 +50,7 @@ coletável dividido por dois.
 
 ```catala
 scope TributacaoConjunta:
+  assertion (ano = 2025)
   assertion opcao_tributacao_conjunta
   assertion (rendimento_coletavel >= $0)
 
