@@ -1,0 +1,239 @@
+> Module Art_070
+
+# Código do IRS
+
+## Artigo 70.º: Mínimo de existência
+
+Source: [2025 wording on AT](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/ra/Pages/irs70ra_202512.aspx).
+N.º 1: Lei n.º 45-A/2024; n.os 2 b)/3: Lei n.º 82/2023;
+n.º 2 c): Lei n.º 34/2024. IAS 2025: €522.50, Portaria n.º 6-B/2025/1.
+
+The user requested the literal printed formula for L. Division and multiplication
+are evaluated left to right: with the €250 general-expense limit, L is exactly
+€7,218.6111… (not €13,863.0555…). Clause b) has an empty interval and a)/c)
+overlap. Overlapping clauses are rejected explicitly, even if clamping would
+make their results equal. No unwritten priority is assigned. Dependents use
+zero general-expense limit, giving L = €14,418.6111… without this overlap.
+This model therefore cannot calculate ordinary low-income returns throughout
+the reference interval; do not treat a conflict as a zero abatimento.
+
+One call to MinimoExistencia is for one holder. Declaration totals include
+all holders, dependents and exempt/excluded income under n.º 5 a). Eligibility
+of predominant income is an input. In ordinary A/H-only returns it is true.
+Specific deductions are the amounts actually used, not nominal allowances.
+The result reduces taxable income BEFORE articles 68, 68-A and 69. All
+intermediate formula arithmetic is exact decimal; round only the abatimento
+to cents (half away from zero), pending AT validation.
+
+```catala-metadata
+declaration scope ExclusaoMinimo:
+  input ano content integer
+  input numero_sujeitos_passivos content integer
+  input rendimentos_brutos_declaracao content money
+  input rendimentos_taxas_liberatorias content money
+  internal ias content money
+  output excluido condition
+
+declaration scope AbatimentoExcluido:
+  input ano content integer
+  input numero_sujeitos_passivos content integer
+  input rendimentos_brutos_declaracao content money
+  input rendimentos_taxas_liberatorias content money
+  internal exclusao content ExclusaoMinimo
+  output excluido condition
+  output abatimento content money
+
+declaration scope MinimoExistencia:
+  input ano content integer
+  input numero_sujeitos_passivos content integer
+  input rendimentos_brutos_declaracao content money
+  input rendimentos_taxas_liberatorias content money
+  input rendimento_bruto content money
+  input deducoes_especificas content money
+  input dependente condition
+  input rendimento_predominante_elegivel condition
+  internal exclusao content ExclusaoMinimo
+  internal ias content money
+  internal limite_despesas content decimal
+  internal taxa_primeiro_escalao content decimal
+  internal limite_primeiro_escalao content decimal
+  internal abatimento_formula content decimal
+  internal elegivel condition
+  output referencia content money
+  output l content decimal
+  output abatimento content money
+```
+
+#### N.º 1
+
+1 - O valor de referência do mínimo de existência é igual ao maior valor
+entre 12 180 € e 1,5 × 14 × IAS.
+
+```catala
+scope MinimoExistencia:
+  definition ias under condition ano = 2025 consequence equals $522.50
+  definition referencia equals
+    let valor_ias equals money of (1.5 * 14.0 * (decimal of ias)) in
+    if valor_ias > $12,180 then valor_ias else $12,180
+```
+
+#### N.º 2
+
+2 - No apuramento do rendimento coletável, para os titulares de rendimentos
+brutos predominantemente originados em trabalho dependente, em atividades
+previstas na tabela constante do anexo i à Portaria n.º 1011/2001, de 21 de
+agosto, com exceção do código 15, ou em pensões é abatido um montante por
+mínimo de existência, por titular, nos seguintes termos:
+
+a) Para os titulares cujo total dos rendimentos brutos seja igual ou inferior
+ao valor de referência, o montante do abatimento é igual à diferença positiva
+entre o valor de referência e a soma das deduções específicas com
+Limite despesas gerais / Taxa 1.º escalão;
+
+b) Para os titulares cujo total dos rendimentos brutos seja superior ao valor
+de referência e igual ou inferior a L, o montante do abatimento é igual à
+diferença positiva entre o valor de referência - 2,60 x (rendimentos brutos -
+valor de referência) e a soma das deduções específicas com
+Limite despesas gerais/taxa 1.º escalão;
+
+c) Para os titulares cujo total dos rendimentos brutos seja superior a L, o
+montante do abatimento é igual à diferença positiva entre L – limite do
+1.º escalão – 1,35 × (rendimentos brutos – L) e a soma das deduções específicas;
+
+d) O montante do abatimento por mínimo de existência tem como valor mínimo
+zero e não pode ser superior à diferença entre os rendimentos brutos e as
+deduções específicas.
+
+Note: the fraction in a) is transcribed with `/`; the source HTML puts the
+denominator on its own line. The literal n.º 3 formula is preserved below.
+
+```catala
+scope MinimoExistencia:
+  assertion (ano = 2025)
+  assertion (rendimento_bruto >= $0)
+  assertion (deducoes_especificas >= $0 and deducoes_especificas <= rendimento_bruto)
+  assertion (rendimento_bruto <= rendimentos_brutos_declaracao)
+  definition exclusao equals output of ExclusaoMinimo with {
+    -- ano: ano
+    -- numero_sujeitos_passivos: numero_sujeitos_passivos
+    -- rendimentos_brutos_declaracao: rendimentos_brutos_declaracao
+    -- rendimentos_taxas_liberatorias: rendimentos_taxas_liberatorias
+  }
+  definition elegivel equals rendimento_predominante_elegivel and not exclusao.excluido
+
+  # Fail closed on the literal a)/c) overlap, before choosing a formula.
+  assertion (not elegivel or not (rendimento_bruto <= referencia and decimal of rendimento_bruto > l))
+
+  definition abatimento_formula under condition not elegivel consequence equals 0.0
+  definition abatimento_formula
+    under condition elegivel and rendimento_bruto <= referencia
+    consequence equals (decimal of referencia) - (decimal of deducoes_especificas)
+      - limite_despesas / taxa_primeiro_escalao
+  definition abatimento_formula
+    under condition elegivel and rendimento_bruto > referencia and decimal of rendimento_bruto <= l
+    consequence equals (decimal of referencia)
+      - 2.60 * (decimal of (rendimento_bruto - referencia))
+      - (decimal of deducoes_especificas) - limite_despesas / taxa_primeiro_escalao
+  definition abatimento_formula
+    under condition elegivel and decimal of rendimento_bruto > l
+    consequence equals l - limite_primeiro_escalao
+      - 1.35 * ((decimal of rendimento_bruto) - l) - (decimal of deducoes_especificas)
+
+  definition abatimento equals
+    let disponivel equals rendimento_bruto - deducoes_especificas in
+    if abatimento_formula <= 0.0 then $0
+    else if abatimento_formula >= decimal of disponivel then disponivel
+    else money of abatimento_formula
+```
+
+#### N.º 3
+
+3 - Para efeitos do disposto no presente artigo, entende-se que:
+
+L = valor de referência - (Limite despesas gerais/Taxa 1.º escalão x 3,60)
++ (Limite 1.º escalão/3,60).
+
+```catala
+scope MinimoExistencia:
+  definition l equals (decimal of referencia)
+    - (limite_despesas / taxa_primeiro_escalao * 3.60)
+    + (limite_primeiro_escalao / 3.60)
+```
+
+#### N.º 4
+
+4 - O abatimento referido no n.º 2 não se aplica a qualquer dos titulares quando:
+
+a) A soma dos rendimentos brutos de todos os titulares é superior a
+2,2 x 14 x IAS multiplicado pelo número de sujeitos passivos;
+
+b) A soma dos rendimentos não englobados e tributados a taxas liberatórias,
+obtidos pelos sujeitos passivos e dependentes constantes da declaração a que
+se refere o artigo 57.º, é superior a 14 x IAS multiplicado pelo número desses
+sujeitos passivos.
+
+```catala
+scope ExclusaoMinimo:
+  assertion (ano = 2025)
+  assertion (numero_sujeitos_passivos = 1 or numero_sujeitos_passivos = 2)
+  assertion (rendimentos_brutos_declaracao >= $0)
+  assertion (rendimentos_taxas_liberatorias >= $0)
+  assertion (rendimentos_taxas_liberatorias <= rendimentos_brutos_declaracao)
+  definition ias under condition ano = 2025 consequence equals $522.50
+  definition excluido equals
+    decimal of rendimentos_brutos_declaracao >
+      2.2 * 14.0 * (decimal of ias) * (decimal of numero_sujeitos_passivos)
+    or decimal of rendimentos_taxas_liberatorias >
+      14.0 * (decimal of ias) * (decimal of numero_sujeitos_passivos)
+
+scope AbatimentoExcluido:
+  definition exclusao equals output of ExclusaoMinimo with {
+    -- ano: ano
+    -- numero_sujeitos_passivos: numero_sujeitos_passivos
+    -- rendimentos_brutos_declaracao: rendimentos_brutos_declaracao
+    -- rendimentos_taxas_liberatorias: rendimentos_taxas_liberatorias
+  }
+  definition excluido equals exclusao.excluido
+  definition abatimento under condition excluido consequence equals $0
+```
+
+#### N.º 5
+
+5 - Para efeitos do presente artigo, considera-se:
+
+a) «Rendimentos brutos», a soma de todos os rendimentos do ano, ainda que
+isentos ou excluídos de tributação, de todas as categorias, declarados na
+declaração a que se refere o artigo 57.º, considerando-se, no caso das
+mais-valias, o saldo apurado entre as mais e as menos-valias, quando positivo,
+e no caso dos rendimentos prediais, o respetivo resultado positivo;
+
+b) «Deduções específicas», o montante total de deduções específicas das quais
+o titular de rendimentos beneficie, previstas nos artigos 25.º, 27.º, 53.º e
+54.º, e as que resultem da alínea b) do n.º 1 e dos n.os 2 e 10 do artigo 31.º;
+
+c) «Limite despesas gerais», o montante do limite global, para cada sujeito
+passivo, da dedução de despesas gerais familiares, conforme definido no n.º 1
+do artigo 78.º-B, considerando-se o valor de zero no caso de titulares dependentes;
+
+d) «Taxa 1.º escalão», a taxa normal do 1.º escalão de IRS, em percentagem,
+conforme definido no n.º 1 do artigo 68.º; e
+
+e) «Limite do 1.º escalão», o limite do 1.º escalão de IRS, conforme definido
+no n.º 1 do artigo 68.º.
+
+```catala
+scope MinimoExistencia:
+  definition limite_despesas equals if dependente then 0.0 else 250.0
+  definition taxa_primeiro_escalao under condition ano = 2025 consequence equals 12.5%
+  definition limite_primeiro_escalao under condition ano = 2025 consequence equals 8059.0
+```
+
+#### N.º 6
+
+6 - A AT publicita no seu sítio na Internet, durante o primeiro trimestre do
+ano seguinte àquele a que respeitam os rendimentos, os valores das variáveis
+utilizadas para o cálculo do mínimo de existência e as fórmulas simplificadas
+correspondentes ao previsto nos n.os 2, 3 e 4.
+
+Note: publication is procedural and is not implemented. Calculation is based
+on the literal law, not a claim of agreement with AT's implementation.

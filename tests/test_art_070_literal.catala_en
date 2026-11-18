@@ -1,0 +1,41 @@
+> Using Art_070
+
+# Literal article 70: non-overlapping regions
+
+Ordinary holder at €7,000: L = 12180 − (250 / .125 × 3.6) + 8059 / 3.6;
+formula a) is €5,717.85 but net income caps it at €2,537.85.
+At €13,000 clause c) gives a negative amount, clamped to zero.
+Dependent at €13,000: L = 12180 + 8059 / 3.6; clause b) gives
+12180 − 2.6 × 820 − 4462.15 = €5,585.85.
+
+```catala
+#[test]
+declaration scope TesteLiteralMinimo2025:
+  output baixo content Art_070.MinimoExistencia
+  output alto content Art_070.MinimoExistencia
+  output dependente content Art_070.MinimoExistencia
+
+scope TesteLiteralMinimo2025:
+  definition baixo equals output of Art_070.MinimoExistencia with {
+    -- ano: 2025 -- numero_sujeitos_passivos: 1
+    -- rendimentos_brutos_declaracao: $7,000 -- rendimentos_taxas_liberatorias: $0
+    -- rendimento_bruto: $7,000 -- deducoes_especificas: $4,462.15
+    -- dependente: false -- rendimento_predominante_elegivel: true
+  }
+  definition alto equals output of Art_070.MinimoExistencia with {
+    -- ano: 2025 -- numero_sujeitos_passivos: 1
+    -- rendimentos_brutos_declaracao: $13,000 -- rendimentos_taxas_liberatorias: $0
+    -- rendimento_bruto: $13,000 -- deducoes_especificas: $4,462.15
+    -- dependente: false -- rendimento_predominante_elegivel: true
+  }
+  definition dependente equals output of Art_070.MinimoExistencia with {
+    -- ano: 2025 -- numero_sujeitos_passivos: 1
+    -- rendimentos_brutos_declaracao: $13,000 -- rendimentos_taxas_liberatorias: $0
+    -- rendimento_bruto: $13,000 -- deducoes_especificas: $4,462.15
+    -- dependente: true -- rendimento_predominante_elegivel: true
+  }
+  assertion (baixo.l = 12180.0 - (250.0 / 12.5% * 3.60) + 8059.0 / 3.60)
+  assertion (baixo.abatimento = $2,537.85)
+  assertion (alto.abatimento = $0)
+  assertion (dependente.abatimento = $5,585.85)
+```

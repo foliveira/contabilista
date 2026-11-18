@@ -1,0 +1,23 @@
+> Module Apoio
+
+# Arithmetic helpers (not independent legal rules)
+
+All amounts use exact decimal arithmetic until explicit money conversion.
+`separada` elsewhere means married/união de facto filing separately, not an
+unmarried individual. Household limits are halved in that case under art. 78
+n.º 14. Expenses must already be allocated to the return under n.os 9–14.
+
+```catala-metadata
+declaration minimo content money depends on a content money, b content money
+  equals if a <= b then a else b
+
+declaration positivo content money depends on a content money
+  equals if a > $0 then a else $0
+
+declaration limite_agregado content money depends on limite content money, separada content boolean
+  equals if separada then money of ((decimal of limite) / 2.0) else limite
+
+declaration deducao_limitada content money
+  depends on despesas content money, taxa content decimal, limite content money
+  equals minimo of (money of ((decimal of despesas) * taxa)), limite
+```

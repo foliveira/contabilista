@@ -1,0 +1,167 @@
+> Using Art_078
+> Using Art_078_a
+> Using Art_078_b
+> Using Art_078_c
+> Using Art_078_d
+> Using Art_078_e
+> Using Art_078_f
+
+# Deductions 2025: hand-calculated values
+
+All expense inputs below are synthetic, eligible and allocated. These test
+arithmetic, not invoice classification or agreement with AT's simulator.
+
+```catala
+#[test]
+declaration scope TesteFamilia2025:
+  output familia content Art_078_a.Familia
+  output partilhada content Art_078_a.Familia
+scope TesteFamilia2025:
+  definition familia equals output of Art_078_a.Familia with {
+    -- ano: 2025 -- ascendentes: 1 -- ascendentes_partilhados: 0
+    -- dependentes: [
+      Art_078_a.Dependente { -- idade: 3 -- partilhado: false };
+      Art_078_a.Dependente { -- idade: 2 -- partilhado: false };
+      Art_078_a.Dependente { -- idade: 1 -- partilhado: false }
+    ]
+  }
+  definition partilhada equals output of Art_078_a.Familia with {
+    -- ano: 2025 -- ascendentes: 1 -- ascendentes_partilhados: 1
+    -- dependentes: [
+      Art_078_a.Dependente { -- idade: 7 -- partilhado: true };
+      Art_078_a.Dependente { -- idade: 6 -- partilhado: true }
+    ]
+  }
+  # 726 + 900 + 900 + 635 = 3161; second child doesn't also get 126.
+  assertion (familia.deducao = $3,161)
+  assertion (partilhada.deducao = $1,067.50)
+
+#[test]
+declaration scope TesteGeraisSaudeEducacao2025:
+  output gerais content Art_078_b.DespesasGerais
+  output monoparental content Art_078_b.DespesasGerais
+  output saude content Art_078_c.Saude
+  output educacao content Art_078_d.Educacao
+  output rendas content Art_078_d.Educacao
+scope TesteGeraisSaudeEducacao2025:
+  definition gerais equals output of Art_078_b.DespesasGerais with {
+    -- ano: 2025 -- despesas_elegiveis: $2,000
+    -- numero_sujeitos_passivos: 2 -- monoparental: false
+  }
+  definition monoparental equals output of Art_078_b.DespesasGerais with {
+    -- ano: 2025 -- despesas_elegiveis: $1,000
+    -- numero_sujeitos_passivos: 1 -- monoparental: true
+  }
+  definition saude equals output of Art_078_c.Saude with {
+    -- ano: 2025 -- despesas_elegiveis_liquidas: $10,000 -- separada: true
+  }
+  definition educacao equals output of Art_078_d.Educacao with {
+    -- ano: 2025 -- despesas_elegiveis: $4,000 -- rendas_estudante_elegiveis: $2,000
+    -- separada: false -- apenas_regime_cirs: true
+  }
+  definition rendas equals output of Art_078_d.Educacao with {
+    -- ano: 2025 -- despesas_elegiveis: $0 -- rendas_estudante_elegiveis: $2,000
+    -- separada: true -- apenas_regime_cirs: true
+  }
+  assertion (gerais.deducao = $500)
+  assertion (monoparental.deducao = $335)
+  assertion (saude.deducao = $500)
+  assertion (educacao.deducao = $1,100)
+  assertion (rendas.deducao = $200)
+
+#[test]
+declaration scope TesteImoveis2025:
+  output baixo content Art_078_e.Imoveis
+  output meio content Art_078_e.Imoveis
+  output alto content Art_078_e.Imoveis
+  output juros content Art_078_e.Imoveis
+scope TesteImoveis2025:
+  definition baixo equals output of Art_078_e.Imoveis with {
+    -- ano: 2025 -- rendas_elegiveis: $20,000 -- juros_elegiveis: $0
+    -- rendimento_coletavel: $8,059 -- conjunta: false -- separada: false -- apenas_regime_cirs: true
+  }
+  definition meio equals output of Art_078_e.Imoveis with {
+    -- ano: 2025 -- rendas_elegiveis: $20,000 -- juros_elegiveis: $0
+    -- rendimento_coletavel: $38,059 -- conjunta: true -- separada: false -- apenas_regime_cirs: true
+  }
+  definition alto equals output of Art_078_e.Imoveis with {
+    -- ano: 2025 -- rendas_elegiveis: $20,000 -- juros_elegiveis: $0
+    -- rendimento_coletavel: $30,000 -- conjunta: false -- separada: true -- apenas_regime_cirs: true
+  }
+  definition juros equals output of Art_078_e.Imoveis with {
+    -- ano: 2025 -- rendas_elegiveis: $0 -- juros_elegiveis: $20,000
+    -- rendimento_coletavel: $19,029.50 -- conjunta: false -- separada: false -- apenas_regime_cirs: true
+  }
+  assertion (baixo.deducao = $1,000)
+  assertion (meio.deducao = $850)
+  assertion (alto.deducao = $350)
+  assertion (juros.deducao = $373)
+
+#[test]
+declaration scope TesteFatura2025:
+  output mista content Art_078_f.Fatura
+  output consignada content Art_078_f.Fatura
+scope TesteFatura2025:
+  definition mista equals output of Art_078_f.Fatura with {
+    -- ano: 2025 -- iva_servicos: $100 -- iva_transportes: $20
+    -- iva_medicamentos_veterinarios: $100 -- iva_publicacoes: $10 -- iva_desporto: $100
+    -- separada: false -- consignar: false
+  }
+  definition consignada equals output of Art_078_f.Fatura with {
+    -- ano: 2025 -- iva_servicos: $10,000 -- iva_transportes: $0
+    -- iva_medicamentos_veterinarios: $0 -- iva_publicacoes: $0 -- iva_desporto: $0
+    -- separada: true -- consignar: true
+  }
+  assertion (mista.deducao = $110 and mista.consignado = $0)
+  assertion (consignada.deducao = $0 and consignada.consignado = $125)
+```
+
+## Article 78 limits and settlement
+
+Midpoint between 8,059 and 80,000: limit €1,750. Three dependents increase
+it by 15%, to €2,012.50. Family/general credits do not consume that limit.
+Excess non-refundable credits must never create a refund.
+
+```catala
+declaration structure Caso:
+  data rc content money
+  data conjunta content boolean
+  data separada content boolean
+  data dependentes content integer
+  data coleta content money
+  data retencoes content money
+  data devido content money
+  data pagar content money
+  data reembolso content money
+
+#[test]
+declaration scope TesteLiquidacao2025:
+  internal casos content list of Caso
+  output resultados content list of Art_078.Liquidacao
+scope TesteLiquidacao2025:
+  definition casos equals [
+    Caso { -- rc: $8,059 -- conjunta: false -- separada: false -- dependentes: 0
+      -- coleta: $5,000 -- retencoes: $0 -- devido: $650 -- pagar: $650 -- reembolso: $0 };
+    Caso { -- rc: $44,029.50 -- conjunta: false -- separada: false -- dependentes: 0
+      -- coleta: $5,000 -- retencoes: $0 -- devido: $2,400 -- pagar: $2,400 -- reembolso: $0 };
+    Caso { -- rc: $88,059 -- conjunta: true -- separada: false -- dependentes: 3
+      -- coleta: $5,000 -- retencoes: $2,500 -- devido: $2,137.50 -- pagar: $0 -- reembolso: $362.50 };
+    Caso { -- rc: $80,000 -- conjunta: false -- separada: false -- dependentes: 0
+      -- coleta: $5,000 -- retencoes: $0 -- devido: $3,150 -- pagar: $3,150 -- reembolso: $0 };
+    Caso { -- rc: $80,000.01 -- conjunta: false -- separada: true -- dependentes: 0
+      -- coleta: $5,000 -- retencoes: $0 -- devido: $3,650 -- pagar: $3,650 -- reembolso: $0 };
+    Caso { -- rc: $5,000 -- conjunta: false -- separada: false -- dependentes: 0
+      -- coleta: $100 -- retencoes: $50 -- devido: $0 -- pagar: $0 -- reembolso: $50 }
+  ]
+  definition resultados equals map each c among casos to
+    output of Art_078.Liquidacao with {
+      -- ano: 2025 -- residente: true -- apenas_creditos_implementados: true
+      -- conjunta: c.conjunta -- separada: c.separada -- dependentes: c.dependentes
+      -- rendimento_coletavel: c.rc -- coleta: c.coleta
+      -- descendentes_ascendentes: $600 -- gerais: $250
+      -- saude: $1,000 -- educacao: $1,100 -- imoveis: $1,000 -- fatura: $400
+      -- retencoes: c.retencoes -- pagamentos_por_conta: $0
+    }
+  assertion (for all (c, v) among (casos, resultados) we have
+    v.imposto_devido = c.devido and v.a_pagar = c.pagar and v.reembolso = c.reembolso)
+```

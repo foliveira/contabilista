@@ -1,0 +1,90 @@
+> Module Art_078_f
+> Using Apoio
+
+# Artigo 78.º-F: Dedução pela exigência de fatura
+
+Source: [2025 wording](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/ra/Pages/irs78fra_202512.aspx).
+N.os 3/7: Lei 24-D/2022; n.º 6: Lei 12/2022; n.º 8: Lei 82/2023.
+The book/culture sectors added by Lei 73-A/2025 are NOT included in 2025.
+
+Inputs are VAT amounts, NOT total invoice prices. They are eligible,
+documented, non-business VAT already allocated under art. 78. Buckets are
+disjoint: veterinary medicines at 35% must not also appear in the 15% bucket.
+Eligibility/CAE classifications, equivalent professions, documentation and
+no education double-counting under n.os 1/4/5 are caller facts. `consignar`
+means assigning the incentive to the qualified entity under n.º 2: it is
+reported separately, not deducted for the taxpayer. This is not an implementation
+of the separate income-tax consignment under art. 152.
+
+```catala-metadata
+declaration scope Fatura:
+  input ano content integer
+  input iva_servicos content money
+  input iva_transportes content money
+  input iva_medicamentos_veterinarios content money
+  input iva_publicacoes content money
+  input iva_desporto content money
+  input separada condition
+  input consignar condition
+  internal incentivo content money
+  output deducao content money
+  output consignado content money
+```
+
+## N.º 1 (introductory rule)
+
+1 - À coleta do IRS devido pelos sujeitos passivos é dedutível um montante
+correspondente a 15 % do IVA suportado por qualquer membro do agregado familiar,
+com o limite global de € 250 por agregado familiar [...]
+
+Eligible sectors in 2025: vehicle/motorcycle maintenance and repair; accommodation
+and restaurants (not already education); hairdressing/beauty; veterinary services.
+N.º 1 f) is revoked. These classifications qualify `iva_servicos`.
+
+## N.º 2 (introductory rule)
+
+2 - O valor do incentivo, calculado nos termos do presente artigo, pode ser atribuído:
+
+Note: a)–c) identify qualified religious/charitable, environmental and public
+utility entities. Selection and qualification remain caller facts.
+
+## N.º 3 (arithmetic extract)
+
+3 - É ainda dedutível à coleta, concorrendo para o limite referido no n.º 1,
+um montante correspondente a 100 % do IVA suportado por qualquer membro do
+agregado familiar, com a aquisição de passes mensais ou de bilhetes para
+utilização de transportes públicos coletivos [...]
+
+## N.º 6
+
+6 - O disposto na alínea e) do n.º 1 inclui a aquisição de medicamentos de
+uso veterinário, concorrendo para o limite referido no n.º 1 um montante
+correspondente a 35 % do IVA suportado por qualquer membro do agregado familiar.
+
+## N.º 7 (arithmetic extract)
+
+7 - É ainda dedutível à coleta, concorrendo para o limite referido no n.º 1,
+um montante correspondente à totalidade do IVA suportado por qualquer membro
+do agregado familiar, que conste de faturas relativas a aquisição de assinaturas
+de publicações periódicas (jornais e revistas), incluindo digitais, tributados
+à taxa reduzida do IVA [...]
+
+## N.º 8 (arithmetic extract)
+
+8 - É também dedutível à coleta, concorrendo para o limite referido no n.º 1,
+um montante correspondente a 30 % do IVA suportado por qualquer membro do
+agregado familiar [...] CAE classe 85510 [...] 93120 [...] 93130 [...]
+
+```catala
+scope Fatura:
+  assertion (ano = 2025)
+  assertion (iva_servicos >= $0 and iva_transportes >= $0
+    and iva_medicamentos_veterinarios >= $0 and iva_publicacoes >= $0 and iva_desporto >= $0)
+  definition incentivo equals Apoio.minimo of
+    (money of ((decimal of iva_servicos) * 15% + (decimal of iva_transportes)
+      + (decimal of iva_medicamentos_veterinarios) * 35%
+      + (decimal of iva_publicacoes) + (decimal of iva_desporto) * 30%)),
+    (Apoio.limite_agregado of $250, separada)
+  definition deducao equals if consignar then $0 else incentivo
+  definition consignado equals if consignar then incentivo else $0
+```

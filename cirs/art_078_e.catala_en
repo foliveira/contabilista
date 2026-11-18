@@ -1,0 +1,97 @@
+> Module Art_078_e
+> Using Apoio
+
+# Artigo 78.º-E: Dedução de encargos com imóveis
+
+Sources: [2025 text, before May 2026](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/ra/Pages/irs78e_ra202605.aspx),
+Lei 36/2024 art. 3 transitional rule, and AT's
+[IRS deductions 2025 leaflet](https://info.portaldasfinancas.gov.pt/pt/apoio_contribuinte/Folhetos_informativos/Documents/IRS_deducoes_2025.pdf).
+
+Eligible amounts are already allocated to this return and net of subsidies.
+Caller checks permanent housing, qualifying contracts/documentation, old-loan
+contract date <=31 December 2011 and excludes principal repayments (n.os 1–3,
+7–9). Rent and old-loan branches cannot be combined. Education rent for the
+same property cannot be claimed twice. Regional EBF art. 41-B enhancements
+are rejected by `apenas_regime_cirs`. Married separate filing halves caps;
+joint filing divides income for the cap formula but does not halve the cap.
+
+```catala-metadata
+declaration scope Imoveis:
+  input ano content integer
+  input rendas_elegiveis content money
+  input juros_elegiveis content money
+  input rendimento_coletavel content money
+  input conjunta condition
+  input separada condition
+  input apenas_regime_cirs condition
+  internal base content decimal
+  internal proporcao content decimal
+  internal limite_rendas content money
+  internal limite_juros content money
+  output deducao content money
+```
+
+## N.º 1 (arithmetic extracts)
+
+1 - À coleta do IRS devido pelos sujeitos passivos é dedutível um montante
+correspondente a 15 % do valor suportado por qualquer membro do agregado familiar:
+
+a) [...] até ao limite de 800 €;
+
+b) Com juros de dívidas, por contratos celebrados até 31 de dezembro de 2011,
+contraídas com a aquisição, construção ou beneficiação de imóveis para habitação
+própria e permanente ou arrendamento devidamente comprovado para habitação
+permanente do arrendatário, até ao limite de (euro) 296;
+
+Note: c)/d) apply the same €296 cap to qualifying cooperative/group-purchase
+interest and financial-lease payments excluding capital; supply them through
+`juros_elegiveis` as a single selected alternative, not multiple allowances.
+
+## N.º 4 (arithmetic extracts)
+
+a) [...] um montante de 1100 €;
+
+b) [...] 800 € + [(1100 € – 800 €) × [(30 000 € – rendimento coletável) /
+(30 000 € – valor do primeiro escalão)]]
+
+**Lei 36/2024, art. 3:** o aumento da dedução prevista na alínea a) do n.º 1
+e nas alíneas a) e b) do n.º 4 do artigo 78.º-E [...] é concretizado
+progressivamente, nos seguintes termos: a) 50 % em 2025; b) 75 % em 2026;
+c) 100 % em 2027.
+
+Note: the 2024 base was €600 and the low-income cap €900. Applying 50% of
+the increases in 2025 gives €700 and €1,000, confirmed by AT's leaflet.
+Do not use the headline €800/€1,100 limits for 2025. N.º 10 is a later 2026
+addition and is not part of this implementation.
+
+## N.º 5 (arithmetic extracts)
+
+a) [...] um montante de € 450;
+
+b) [...] € 296 + [(€ 450 − € 296) × [(€ 30 000 − Rendimento Coletável) /
+(30 000 − valor do primeiro escalão)]]
+
+## N.º 6
+
+6 - As deduções referidas no n.º 1 não são cumulativas.
+
+```catala
+scope Imoveis:
+  assertion (ano = 2025)
+  assertion apenas_regime_cirs
+  assertion (not (conjunta and separada))
+  assertion (rendas_elegiveis >= $0 and juros_elegiveis >= $0 and rendimento_coletavel >= $0)
+  assertion (rendas_elegiveis = $0 or juros_elegiveis = $0)
+  definition base equals (decimal of rendimento_coletavel) / (if conjunta then 2.0 else 1.0)
+  definition proporcao equals
+    if base <= 8059.0 then 1.0
+    else if base >= 30000.0 then 0.0
+    else (30000.0 - base) / (30000.0 - 8059.0)
+  definition limite_rendas equals
+    money of ((700.0 + 300.0 * proporcao) / (if separada then 2.0 else 1.0))
+  definition limite_juros equals
+    money of ((296.0 + 154.0 * proporcao) / (if separada then 2.0 else 1.0))
+  definition deducao equals
+    (Apoio.deducao_limitada of rendas_elegiveis, 15%, limite_rendas)
+    + (Apoio.deducao_limitada of juros_elegiveis, 15%, limite_juros)
+```

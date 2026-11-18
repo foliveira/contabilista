@@ -12,7 +12,7 @@ Each file holds the text of one article of the law, in Portuguese, with the code
   returns; co-ownership/dependent allocation remains a caller responsibility.
 - Article 69 applies the joint-filing quotient and doubles the article 68
   result. Joint-filing eligibility is supplied by the caller.
-- All nine test scopes pass under Catala 1.3.0, and the OCaml target builds.
+- All nineteen test scopes pass under Catala 1.3.0, and the OCaml target builds.
 - No result has been compared with the tax authority's (AT) simulator yet.
 
 Do not use this to file a tax return or to give tax advice.

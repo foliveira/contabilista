@@ -1,0 +1,54 @@
+> Module Art_078_b
+> Using Apoio
+
+# Artigo 78.º-B: Dedução das despesas gerais familiares
+
+Source: [AT](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs78b.aspx).
+2025 arithmetic: DL 28/2019 and n.º 9 from Lei 82-E/2014. Procedural n.º 5
+was amended by DL 49/2025 (effective 1 July 2025).
+
+One call per return: allocated eligible non-business expenses only, excluding
+health, education and housing expenses. Documentation, invoice year, fiscal
+identification and communication requirements in n.os 2–8 are caller-attested;
+this is not an invoice classifier. Joint filing uses two taxpayers and total
+household expenses. Single or separate filing uses one taxpayer, with expenses
+already allocated under art. 78. Monoparental eligibility is a caller fact.
+The result is a credit before the available-coleta cap under art. 78.
+
+```catala-metadata
+declaration scope DespesasGerais:
+  input ano content integer
+  input despesas_elegiveis content money
+  input numero_sujeitos_passivos content integer
+  input monoparental condition
+  output deducao content money
+```
+
+## N.º 1
+
+1 - À coleta do IRS devido pelos sujeitos passivos é dedutível um montante
+correspondente a 35 % do valor suportado por qualquer membro do agregado
+familiar, com o limite global de € 250 para cada sujeito passivo, que conste
+de faturas que titulem prestações de serviços e aquisições de bens comunicadas
+à Autoridade Tributária e Aduaneira nos termos do Decreto-Lei n.º 198/2012,
+de 24 de agosto, ou emitidas no Portal das Finanças, enquadradas em qualquer
+setor de atividade, exceto os setores previstos nos artigos 78.º-C a 78.º-E.
+
+## N.º 9
+
+9 - No caso de famílias monoparentais, a dedução prevista no n.º 1 é de 45 %
+do valor suportado por qualquer membro do agregado familiar, com o limite
+global de (euro) 335.
+
+```catala
+scope DespesasGerais:
+  assertion (ano = 2025)
+  assertion (despesas_elegiveis >= $0)
+  assertion (numero_sujeitos_passivos = 1 or numero_sujeitos_passivos = 2)
+  assertion (not monoparental or numero_sujeitos_passivos = 1)
+  definition deducao equals
+    Apoio.deducao_limitada of despesas_elegiveis,
+      (if monoparental then 45% else 35%),
+      (if monoparental then $335
+       else money of (250.0 * (decimal of numero_sujeitos_passivos)))
+```

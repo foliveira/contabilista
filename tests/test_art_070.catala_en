@@ -1,0 +1,55 @@
+> Using Art_025
+> Using Art_022
+> Using Art_070
+> Using Art_068
+
+# Article 70 n.º 4: one taxpayer with gross A income of €20,000
+
+Gross household income €20,000 exceeds 2.2 × 14 × €522.50 = €16,093.
+No abatimento applies. Article 25 deducts €4,462.15, leaving €15,537.85;
+article 22 keeps that amount. Article 68 then gives
+€12,160 × 13.680% + €3,377.85 × 21.5% = €2,389.72575 → €2,389.73.
+This is general-rate coleta, not final tax after credits. It does not test
+the blocked article 70 n.os 2/3 formula.
+
+```catala
+#[test]
+declaration scope TesteExclusaoMinimo2025:
+  internal trabalho content Art_025.DeducaoTrabalho
+  internal englobamento content Art_022.Englobamento
+  internal minimo content Art_070.AbatimentoExcluido
+  output taxas content Art_068.TaxasGerais
+
+scope TesteExclusaoMinimo2025:
+  definition trabalho equals output of Art_025.DeducaoTrabalho with {
+    -- ano: 2025
+    -- rendimento_bruto: $20,000
+    -- contribuicoes_obrigatorias: $2,200
+    -- indemnizacoes_elegiveis: $0
+    -- quotizacoes_sindicais_elegiveis: $0
+    -- quotizacoes_ordens_elegiveis: $0
+  }
+  definition englobamento equals output of Art_022.Englobamento with {
+    -- ano: 2025
+    -- apenas_residentes: true
+    -- apenas_regime_geral_a_h: true
+    -- rendimentos_isentos_com_englobamento: $0
+    -- titulares: [Art_022.RendimentosTitular {
+      -- rendimento_liquido_a: trabalho.rendimento_liquido
+      -- rendimento_liquido_h: $0 }]
+  }
+  definition minimo equals output of Art_070.AbatimentoExcluido with {
+    -- ano: 2025
+    -- numero_sujeitos_passivos: 1
+    -- rendimentos_brutos_declaracao: $20,000
+    -- rendimentos_taxas_liberatorias: $0
+  }
+  definition taxas equals output of Art_068.TaxasGerais with {
+    -- ano: 2025
+    -- rendimento_coletavel: englobamento.rendimento_coletavel - minimo.abatimento
+  }
+  assertion minimo.excluido
+  assertion (minimo.abatimento = $0)
+  assertion (englobamento.rendimento_coletavel = $15,537.85)
+  assertion (taxas.imposto = $2,389.73)
+```

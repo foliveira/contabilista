@@ -1,0 +1,59 @@
+> Module Art_078_d
+> Using Apoio
+
+# Artigo 78.º-D: Dedução de despesas de formação e educação
+
+Source: [AT](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs78d.aspx).
+2025 limits from Lei 82/2023; DL 49/2025 changes procedural deadlines only.
+
+Expenses are eligible net amounts already allocated to this return. The caller
+checks recognized institutions, invoice communication, age <=25 and distance
+over 50 km for displaced-student rent, and removes reimbursements/excluded benefits
+and category B expenses under n.os 1–10. No overlap with art. 78-E for the same
+property. `apenas_regime_cirs` rejects EBF art. 41-B regional enhancements,
+which need a separate implementation (not silently treated as ordinary expenses).
+The rent cap is on the deduction, not on rent paid. Rents are a disjoint input.
+
+```catala-metadata
+declaration scope Educacao:
+  input ano content integer
+  input despesas_elegiveis content money
+  input rendas_estudante_elegiveis content money
+  input separada condition
+  input apenas_regime_cirs condition
+  internal normal content money
+  internal rendas content money
+  output deducao content money
+```
+
+## N.º 1 (introductory rule)
+
+1 - À coleta do IRS devido pelos sujeitos passivos é dedutível um montante
+correspondente a 30 % do valor suportado a título de despesas de formação e
+educação, incluindo formação profissional, por qualquer membro do agregado
+familiar, com o limite global de 800 €:
+
+```catala
+scope Educacao:
+  assertion (ano = 2025)
+  assertion apenas_regime_cirs
+  assertion (despesas_elegiveis >= $0 and rendas_estudante_elegiveis >= $0)
+  definition normal equals Apoio.deducao_limitada of despesas_elegiveis, 30%,
+    (Apoio.limite_agregado of $800, separada)
+```
+
+## N.º 11 a), d)
+
+a) É dedutível a título de rendas um valor máximo de 400 € anuais, sendo
+limite global de 800 € aumentado em 300 € quando a diferença seja relativa a rendas;
+
+d) A dedução em causa não é cumulável, em relação ao mesmo imóvel, com a
+dedução relativa a encargos com imóveis prevista no artigo 78.º-E.
+
+```catala
+scope Educacao:
+  definition rendas equals Apoio.deducao_limitada of rendas_estudante_elegiveis, 30%,
+    (Apoio.limite_agregado of $400, separada)
+  definition deducao equals Apoio.minimo of (normal + rendas),
+    (Apoio.limite_agregado of $1,100, separada)
+```
