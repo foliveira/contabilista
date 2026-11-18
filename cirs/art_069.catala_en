@@ -1,0 +1,79 @@
+> Module Art_069
+> Using Art_068
+
+# Código do IRS
+
+## Capítulo III: Taxas
+
+### Artigo 69.º: Quociente familiar
+
+Note: wording of Lei n.º 7-A/2016, de 30 de março, the one applicable to 2025
+income (no later amendments). Source:
+[AT, artigo 69.º](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs69.aspx).
+
+Despite the article title, the per-dependent quotient was revoked (old n.º 2).
+What remains is the joint-filing rule: the rates corresponding to half the
+rendimento coletável, with the result doubled. Eligibility (married and not
+judicially separated, or união de facto) and the option for joint taxation
+are facts the caller attests through the input condition below; this scope
+performs no eligibility check of its own.
+
+Rounding: the composition is literal. Artigo 68 is applied to the quotient
+with its own convention of rounding once, to the cent, and the result is
+then doubled exactly. When the rendimento coletável has an odd number of
+cents, the quotient itself is rounded to a cent, because the money type
+cannot hold half cents; this is part of the same open rounding question
+as artigo 68 (see PLAN.md), to be settled against AT's simulator.
+
+```catala-metadata
+declaration scope TributacaoConjunta:
+  input ano content integer
+  input opcao_tributacao_conjunta condition
+  input rendimento_coletavel content money
+  output quociente content money
+  output imposto content money
+```
+
+#### N.º 1
+
+1 - Tratando-se de sujeitos passivos casados e não separados judicialmente
+de pessoas e bens ou unidos de facto, nos casos em que haja opção pela
+tributação conjunta as taxas aplicáveis são as correspondentes ao rendimento
+coletável dividido por dois.
+
+```catala
+scope TributacaoConjunta:
+  assertion opcao_tributacao_conjunta
+  assertion (rendimento_coletavel >= $0)
+
+  definition quociente equals
+    money of ((decimal of rendimento_coletavel) / 2.0)
+```
+
+#### N.º 2
+
+2 - (Revogado pela Lei n.º 7-A/2016 de 30 de março)
+
+#### N.º 3
+
+3 - As taxas fixadas no artigo 68.º aplicam-se ao quociente do rendimento
+coletável, multiplicando-se por dois o resultado obtido para se apurar a
+coleta do IRS.
+
+```catala
+scope TributacaoConjunta:
+  definition imposto equals
+    let imposto_quociente equals
+      output of Art_068.TaxasGerais with {
+        -- ano: ano
+        -- rendimento_coletavel: quociente
+      }
+    in
+    money of (2.0 * (decimal of imposto_quociente.imposto))
+```
+
+#### N.os 4 e 5
+
+4 - (Revogado pela Lei n.º 7-A/2016 de 30 de março)
+
+5 - (Revogado pela Lei n.º 7-A/2016 de 30 de março)
