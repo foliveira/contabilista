@@ -1,0 +1,190 @@
+> Module Art_022
+
+# Código do IRS
+
+## Capítulo II: Determinação do rendimento coletável
+
+### Secção I: Regras gerais
+
+### Artigo 22.º: Englobamento
+
+Sources: [AT, artigo 22.º](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs22.aspx)
+and its [wording before July 2025](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/ra/Pages/irs22ra_202503.aspx).
+N.º 3 reflects Leis n.os 12/2022 and 24-D/2022; n.º 10 was added by
+Lei n.º 24-D/2022. N.º 9 below is the wording of Decreto-Lei n.º 49/2025,
+de 27 de março, effective 1 July 2025; this procedural amendment does not
+change the arithmetic in n.º 1.
+
+Implementation boundary: n.º 1 for 2025 residents with ordinary category A/H
+income only, after all applicable category deductions and abatements. Each
+entry contains one holder's net A and H amounts attributable to this return.
+Use the `rendimento_liquido` outputs of arts. 25/53, calculated on annual
+income per holder (not per employer). The same holder's A and H deductions
+remain separate; unused deductions must not offset another category or holder.
+
+The caller determines which holders belong on this return. Co-ownership and
+dependent-income allocation (n.os 2 and 8) must already have been performed,
+after determining the legally admitted deductions; those allocation rules
+are quoted but not implemented here. This is not a household-membership model.
+For joint filing include both holders' net income: do not divide by two here
+(art. 69 is a later step). Empty lists represent a return with no income.
+
+Non-residents, special regimes (including transitional RNH rules under art.
+236 of Lei n.º 82/2023), other income categories, and exempt income affecting
+the rate are unsupported. The caller must attest the first two conditions
+below; exempt income is explicitly rejected rather than silently ignored.
+This scope calculates taxable income, not the tax due or an art. 81 credit.
+
+```catala-metadata
+declaration structure RendimentosTitular:
+  data rendimento_liquido_a content money
+  data rendimento_liquido_h content money
+
+declaration scope Englobamento:
+  input ano content integer
+  input apenas_residentes condition
+  input apenas_regime_geral_a_h condition
+  input rendimentos_isentos_com_englobamento content money
+  input titulares content list of RendimentosTitular
+  output rendimento_categoria_a content money
+  output rendimento_categoria_h content money
+  output rendimento_coletavel content money
+```
+
+#### N.º 1
+
+1 - O rendimento coletável em IRS é o que resulta do englobamento dos
+rendimentos das várias categorias auferidos em cada ano, depois de feitas
+as deduções e os abatimentos previstos nas secções seguintes.
+
+```catala
+scope Englobamento:
+  assertion (ano = 2025)
+  assertion apenas_regime_geral_a_h
+  assertion (for all t among titulares we have
+    t.rendimento_liquido_a >= $0 and t.rendimento_liquido_h >= $0)
+
+  definition rendimento_categoria_a equals
+    combine all t among titulares in total initially $0
+    with total + t.rendimento_liquido_a
+
+  definition rendimento_categoria_h equals
+    combine all t among titulares in total initially $0
+    with total + t.rendimento_liquido_h
+
+  definition rendimento_coletavel equals
+    rendimento_categoria_a + rendimento_categoria_h
+```
+
+#### N.º 2
+
+2 - Nas situações de contitularidade, o englobamento faz-se nos seguintes termos:
+
+a) Tratando-se de rendimentos da categoria B, cada contitular engloba a parte
+do rendimento que lhe couber, na proporção das respetivas quotas;
+
+b) Tratando-se de rendimentos das restantes categorias, cada contitular
+engloba os rendimentos ilíquidos e as deduções legalmente admitidas, na
+proporção das respetivas quotas.
+
+Note: allocation is a caller precondition, not a second specific deduction.
+
+#### N.º 3
+
+3 - Não são englobados para efeitos da sua tributação:
+
+a) Os rendimentos auferidos por sujeitos passivos não residentes em território
+português, com exceção das mais-valias previstas nas alíneas a) e d) do n.º 1
+do artigo 10.º que não sejam imputáveis a estabelecimento estável nele situado
+e sem prejuízo do disposto nos n.os 13 e 14 do artigo 72.º;
+
+b) Os rendimentos referidos nos artigos 71.º e 72.º auferidos por residentes
+em território português, sem prejuízo da opção pelo englobamento e do
+englobamento obrigatório neles previsto.
+
+Note: reject non-residents; n.º 3 b) is outside the ordinary A/H scope.
+
+```catala
+scope Englobamento:
+  assertion apenas_residentes
+```
+
+#### N.º 4
+
+4 - Ainda que não englobados para efeito da sua tributação, são sempre
+incluídos para efeito de determinação da taxa a aplicar aos restantes
+rendimentos, os rendimentos isentos, quando a lei imponha o respetivo
+englobamento.
+
+Note: these incomes require a separate rate calculation, not simply inclusion
+in taxable income. That calculation is not implemented yet.
+
+```catala
+scope Englobamento:
+  assertion (rendimentos_isentos_com_englobamento = $0)
+```
+
+#### N.º 5
+
+5 - Quando o sujeito passivo exerça a opção referida no n.º 3, fica, por esse
+facto, obrigado a englobar a totalidade dos rendimentos da mesma categoria
+de rendimentos.
+
+#### N.º 6
+
+6 - Quando o sujeito passivo aufira rendimentos que deem direito a crédito
+de imposto por dupla tributação internacional previsto no artigo 81.º, os
+correspondentes rendimentos devem ser considerados pelas respetivas
+importâncias ilíquidas dos impostos sobre o rendimento pagos no estrangeiro.
+
+Note: any foreign A/H income supplied to arts. 25/53 must be gross of foreign
+income tax. Withholding (Portuguese or foreign) is not a category deduction.
+No foreign-tax credit is computed here.
+
+#### N.º 7
+
+7 - Sempre que a lei imponha o englobamento de rendimentos isentos, observa-se
+o seguinte:
+
+a) Os rendimentos isentos são considerados, sem deduções, para efeitos do
+disposto no artigo 69.º, sendo caso disso, e para determinação das taxas a
+aplicar ao restante rendimento coletável;
+
+b) Para efeitos da alínea anterior, quando seja de aplicar o disposto no
+artigo 69.º, o quociente da divisão por 2 dos rendimentos isentos é imputado
+proporcionalmente à fração de rendimento a que corresponde a taxa média e
+a taxa normal.
+
+#### N.º 8
+
+8 - Quando os dependentes, nas situações referidas no n.º 9 do artigo 13.º,
+tiverem obtido rendimentos devem os mesmos:
+
+a) Ser incluídos na declaração do agregado em que se integram, salvo o
+disposto na alínea seguinte;
+
+b) Ser divididos em partes iguais a incluir, respetivamente, em cada uma das
+declarações dos sujeitos passivos, em caso de residência alternada estabelecida
+em acordo de regulação do exercício das responsabilidades parentais em vigor
+no último dia do ano a que o imposto respeita.
+
+#### N.º 9
+
+9 - Para efeitos do disposto na alínea b) do número anterior, devem os sujeitos
+passivos comunicar no Portal das Finanças, até ao final do mês de fevereiro
+do ano seguinte àquele a que o imposto respeita, a existência de residência
+alternada prevista no referido acordo.
+
+Note: procedural obligation, outside the arithmetic model.
+
+#### N.º 10
+
+10 - Sempre que a lei imponha o englobamento de rendimentos auferidos por
+sujeitos passivos não residentes em território português são tidos em
+consideração, para efeitos de determinação da taxa a aplicar de acordo com
+a tabela prevista no n.º 1 do artigo 68.º, todos os rendimentos auferidos,
+incluindo os obtidos fora deste território, nas mesmas condições que são
+aplicáveis aos residentes.
+
+Note: non-resident rate determination is not implemented; see the residency
+assertion under n.º 3.

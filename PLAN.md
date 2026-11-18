@@ -30,12 +30,17 @@ The milestone is done when:
 
 ## Implementation progress
 
-- Articles 25, 53 and 68 implemented for 2025; four test scopes pass with
+- Articles 25, 53 and 68, plus art. 22 n.º 1 for ordinary resident A/H
+  returns, implemented for 2025; six test scopes pass with
   Catala 1.3.0 and the OCaml target builds.
 - Articles 25/53 take eligible expenses as inputs and operate per holder.
   Non-qualifying annuities require art. 54 and are rejected by the pension scope.
-- Next: art. 22, aggregation and taxable income. AT simulator comparisons
-  and the rounding/bracket-limit questions below remain outstanding.
+- Art. 22 aggregates net A/H income per holder after category deductions.
+  Allocation under n.os 2/8 remains a caller responsibility; non-residents,
+  special regimes and exempt income affecting the rate are rejected. Separate
+  Python-driven Catala checks exercise these guards and invalid amounts/years.
+- Next: art. 69, quociente conjugal. AT simulator comparisons and the
+  rounding/bracket-limit questions below remain outstanding.
 
 ## Later milestones
 

@@ -1,0 +1,145 @@
+> Using Art_022
+> Using Art_025
+> Using Art_053
+
+# Tests: artigo 22.º do CIRS, 2025
+
+## Aggregation of already-deducted income
+
+Hand-built inputs check the empty list, zero income, A only, H only, mixed
+categories, multiple holders, and cents. These are net amounts: no further
+€4,462.15 deduction or joint-filing division belongs in this scope.
+
+```catala
+declaration structure CasoLiquido:
+  data titulares content list of Art_022.RendimentosTitular
+  data total_a content money
+  data total_h content money
+
+#[test]
+declaration scope TesteEnglobamento2025:
+  internal casos content list of CasoLiquido
+  output calculado content list of Art_022.Englobamento
+
+scope TesteEnglobamento2025:
+  definition casos equals [
+    CasoLiquido { -- titulares: [] -- total_a: $0 -- total_h: $0 };
+    CasoLiquido { -- titulares: [Art_022.RendimentosTitular {
+      -- rendimento_liquido_a: $0 -- rendimento_liquido_h: $0 }]
+      -- total_a: $0 -- total_h: $0 };
+    CasoLiquido { -- titulares: [Art_022.RendimentosTitular {
+      -- rendimento_liquido_a: $15,537.85 -- rendimento_liquido_h: $0 }]
+      -- total_a: $15,537.85 -- total_h: $0 };
+    CasoLiquido { -- titulares: [Art_022.RendimentosTitular {
+      -- rendimento_liquido_a: $0 -- rendimento_liquido_h: $7,537.85 }]
+      -- total_a: $0 -- total_h: $7,537.85 };
+    CasoLiquido { -- titulares: [Art_022.RendimentosTitular {
+      -- rendimento_liquido_a: $15,537.85 -- rendimento_liquido_h: $7,537.85 }]
+      -- total_a: $15,537.85 -- total_h: $7,537.85 };
+    CasoLiquido { -- titulares: [
+      Art_022.RendimentosTitular { -- rendimento_liquido_a: $15,537.85 -- rendimento_liquido_h: $0 };
+      Art_022.RendimentosTitular { -- rendimento_liquido_a: $0 -- rendimento_liquido_h: $7,537.85 };
+      Art_022.RendimentosTitular { -- rendimento_liquido_a: $0.01 -- rendimento_liquido_h: $0.02 }]
+      -- total_a: $15,537.86 -- total_h: $7,537.87 }
+  ]
+
+  definition calculado equals map each c among casos to
+    output of Art_022.Englobamento with {
+      -- ano: 2025
+      -- apenas_residentes: true
+      -- apenas_regime_geral_a_h: true
+      -- rendimentos_isentos_com_englobamento: $0
+      -- titulares: c.titulares
+    }
+
+  assertion (for all (c, v) among (casos, calculado) we have
+    v.rendimento_categoria_a = c.total_a and
+    v.rendimento_categoria_h = c.total_h and
+    v.rendimento_coletavel = c.total_a + c.total_h)
+```
+
+## Integration: arts. 25 and 53 before art. 22
+
+Each inner list is one return; each row within it is one holder's annual
+income. No expenses except mandatory A contributions are claimed here.
+Expected totals, independently calculated:
+
+- No holders: €0 (no category calls, still a valid 2025 aggregation).
+- A €20,000 less €4,462.15: €15,537.85.
+- H €12,000 less €4,462.15: €7,537.85.
+- A €20,000 and H €12,000 for the same holder: €23,075.70.
+- Two A holders at €20,000 each: €31,075.70, not €35,537.85 or €15,537.85.
+- A €1,000 and H €12,000: €7,537.85; unused A deduction cannot reduce H.
+- A €1,000 for one holder and €20,000 for another: €15,537.85.
+- A €50,000 less contributions €5,500, plus H €3,000 fully deducted: €44,500.
+
+```catala
+declaration structure BrutoTitular:
+  data bruto_a content money
+  data bruto_h content money
+  data contribuicoes_a content money
+
+declaration structure CasoBruto:
+  data titulares content list of BrutoTitular
+  data esperado content money
+
+#[test]
+declaration scope TesteDeducoesEnglobamento2025:
+  internal casos content list of CasoBruto
+  output calculado content list of money
+
+scope TesteDeducoesEnglobamento2025:
+  definition casos equals [
+    CasoBruto { -- titulares: [] -- esperado: $0 };
+    CasoBruto { -- titulares: [BrutoTitular { -- bruto_a: $20,000 -- bruto_h: $0 -- contribuicoes_a: $0 }]
+      -- esperado: $15,537.85 };
+    CasoBruto { -- titulares: [BrutoTitular { -- bruto_a: $0 -- bruto_h: $12,000 -- contribuicoes_a: $0 }]
+      -- esperado: $7,537.85 };
+    CasoBruto { -- titulares: [BrutoTitular { -- bruto_a: $20,000 -- bruto_h: $12,000 -- contribuicoes_a: $0 }]
+      -- esperado: $23,075.70 };
+    CasoBruto { -- titulares: [
+      BrutoTitular { -- bruto_a: $20,000 -- bruto_h: $0 -- contribuicoes_a: $0 };
+      BrutoTitular { -- bruto_a: $20,000 -- bruto_h: $0 -- contribuicoes_a: $0 }]
+      -- esperado: $31,075.70 };
+    CasoBruto { -- titulares: [BrutoTitular { -- bruto_a: $1,000 -- bruto_h: $12,000 -- contribuicoes_a: $0 }]
+      -- esperado: $7,537.85 };
+    CasoBruto { -- titulares: [
+      BrutoTitular { -- bruto_a: $1,000 -- bruto_h: $0 -- contribuicoes_a: $0 };
+      BrutoTitular { -- bruto_a: $20,000 -- bruto_h: $0 -- contribuicoes_a: $0 }]
+      -- esperado: $15,537.85 };
+    CasoBruto { -- titulares: [BrutoTitular { -- bruto_a: $50,000 -- bruto_h: $3,000 -- contribuicoes_a: $5,500 }]
+      -- esperado: $44,500 }
+  ]
+
+  definition calculado equals map each c among casos to
+    let liquidos equals map each t among c.titulares to
+      let trabalho equals output of Art_025.DeducaoTrabalho with {
+        -- ano: 2025
+        -- rendimento_bruto: t.bruto_a
+        -- contribuicoes_obrigatorias: t.contribuicoes_a
+        -- indemnizacoes_elegiveis: $0
+        -- quotizacoes_sindicais_elegiveis: $0
+        -- quotizacoes_ordens_elegiveis: $0
+      } in
+      let pensoes equals output of Art_053.DeducaoPensoes with {
+        -- ano: 2025
+        -- rendimento_bruto: t.bruto_h
+        -- contribuicoes_obrigatorias: $0
+        -- quotizacoes_sindicais_elegiveis: $0
+        -- apenas_pensoes_elegiveis: true
+      } in
+      Art_022.RendimentosTitular {
+        -- rendimento_liquido_a: trabalho.rendimento_liquido
+        -- rendimento_liquido_h: pensoes.rendimento_liquido
+      }
+    in
+    (output of Art_022.Englobamento with {
+      -- ano: 2025
+      -- apenas_residentes: true
+      -- apenas_regime_geral_a_h: true
+      -- rendimentos_isentos_com_englobamento: $0
+      -- titulares: liquidos
+    }).rendimento_coletavel
+
+  assertion (for all (c, v) among (casos, calculado) we have v = c.esperado)
+```

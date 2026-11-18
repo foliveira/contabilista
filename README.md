@@ -8,7 +8,9 @@ Each file holds the text of one article of the law, in Portuguese, with the code
 
 - Articles 25 and 53 (employment and pension deductions) and article 68
   (general tax rates) for income earned in 2025 are implemented, with tests.
-- All four test scopes pass under Catala 1.3.0, and the OCaml target builds.
+- Article 22 n.º 1 aggregates already-deducted A/H income for ordinary resident
+  returns; co-ownership/dependent allocation remains a caller responsibility.
+- All six test scopes pass under Catala 1.3.0, and the OCaml target builds.
 - No result has been compared with the tax authority's (AT) simulator yet.
 
 Do not use this to file a tax return or to give tax advice.
@@ -38,6 +40,13 @@ Then, in this folder, run all the tests:
 
 ```sh
 clerk test
+```
+
+To check that article 22 rejects unsupported and invalid inputs (requires
+Python 3.9+ and `catala` on PATH):
+
+```sh
+python -m unittest discover -s tests -p 'test_*_guards.py'
 ```
 
 To see the numbers from one test:
