@@ -6,13 +6,22 @@ Each file holds the text of one article of the law, in Portuguese, with the code
 
 ## Status
 
-- Articles 25 and 53 (employment and pension deductions) and article 68
-  (general tax rates) for income earned in 2025 are implemented, with tests.
-- Article 22 n.º 1 aggregates already-deducted A/H income for ordinary resident
-  returns; co-ownership/dependent allocation remains a caller responsibility.
+For income earned in 2025, with tests:
+
+- Articles 25 and 53 (employment and pension deductions), 68 (general rates),
+  68-A (solidarity surcharge), 70 (mínimo de existência), 78 to 78-F (deductions
+  from tax) and 22 n.º 1 (aggregation of already-deducted A/H income for
+  ordinary resident returns).
 - Article 69 applies the joint-filing quotient and doubles the article 68
   result. Joint-filing eligibility is supplied by the caller.
-- All nineteen test scopes pass under Catala 1.3.0, and the OCaml target builds.
+- `cirs/irs_2025.catala_en` composes the full ordinary resident A/H return
+  from the article scopes: per-holder deductions, minimum existence, rates,
+  credits and settlement. One entry per holder, including a zero-income spouse
+  in joint returns.
+- All 27 test scopes pass under Catala 1.3.0, and the OCaml target builds.
+  Python guard suites check that unsupported inputs are rejected, and exact
+  rational oracles check the deliberately literal articles 68, 69, 68-A and 70
+  against hand-worked values.
 - No result has been compared with the tax authority's (AT) simulator yet.
 
 Do not use this to file a tax return or to give tax advice.
@@ -44,11 +53,11 @@ Then, in this folder, run all the tests:
 clerk test
 ```
 
-To check that articles 22 and 69 reject unsupported and invalid inputs (requires
-Python 3.9+ and `catala` on PATH):
+To check input-contract guards and exact-arithmetic oracles (requires Python
+3.9+ and `catala` on PATH):
 
 ```sh
-python -m unittest discover -s tests -p 'test_*_guards.py'
+python -m unittest discover -s tests -p 'test_*.py'
 ```
 
 To see the numbers from one test:

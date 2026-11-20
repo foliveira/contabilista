@@ -30,9 +30,16 @@ The milestone is done when:
 
 ## Implementation progress
 
-- Articles 25, 53, 68 and 69, plus art. 22 n.º 1 for ordinary resident A/H
-  returns, implemented for 2025; nine test scopes pass with
+- Articles 25, 53, 68, 68-A, 70, 78 to 78-F and 69, plus art. 22 n.º 1 for
+  ordinary resident A/H returns, implemented for 2025; 27 test scopes pass with
   Catala 1.3.0 and the OCaml target builds.
+- `cirs/irs_2025.catala_en` composes the full return: one entry per holder
+  (including a zero-income spouse), per-holder A+H deductions, one art. 70 call
+  per holder over combined gross, aggregation, rates, credits and settlement.
+  Household totals, filing flags and credit-limit income are derived, not
+  independently supplied. Split dependent/co-owned income and low-income
+  monoparental returns are rejected (the latter because the low-level art. 70
+  scope uses the ordinary €250 limit, not the €335 monoparental limit).
 - Articles 25/53 take eligible expenses as inputs and operate per holder.
   Non-qualifying annuities require art. 54 and are rejected by the pension scope.
 - Art. 22 aggregates net A/H income per holder after category deductions.
@@ -42,8 +49,23 @@ The milestone is done when:
 - Art. 69 divides household taxable income by two, applies art. 68 and
   doubles the result. Tests cover bracket limits, odd cents, input guards
   and integration with art. 22. Eligibility for joint filing is caller-attested.
-- Next: art. 68-A, taxa adicional de solidariedade. AT simulator comparisons
-  and the rounding/bracket-limit questions below remain outstanding.
+- Art. 70 keeps the literal formula. AT's published 2025 page shows the same
+  ambiguous `Limite despesas gerais/Taxa 1.º escalão x 3,60` text, so nothing
+  new was learned from it. An exact-rational reference test now checks six
+  hand-worked cases against the scope. The a)/c) overlap between €7,218.61 and
+  €12,180 is preserved as an explicit failure rather than hidden by an
+  unwritten priority. Expected abatement values: €5,585.85 for a dependent with
+  €13,000 gross and €4,462.15 deductions; zero for an ordinary holder at that
+  income (L is €14,418.61 / €7,218.61 respectively — L is not the abatement).
+- Exact rational oracles also cover the art. 68 bracket matrix (including
+  exact limits), art. 69's provisional double rounding, and art. 68-A.
+- Next: AT simulator comparisons and the rounding/bracket-limit questions
+  below remain outstanding. A sweep over household profiles up to €500,000
+  was attempted against the compiled OCaml target but was abandoned: the
+  environment cannot link the generated runtime (missing libgmp linker
+  alias), and a hand-copied reimplementation of the calculation would not
+  exercise the real code. Also missing: the simulator-verified case set that
+  milestone 1 requires (20+ cases).
 
 ## Later milestones
 

@@ -1,0 +1,32 @@
+> Using Irs_2025
+> Using Art_078_a
+
+# Isolated public-output regression
+
+Checks flat imported output access, independently of nested scope visibility.
+Synthetic eligible general expenses: 35% × €1,000, capped at €250.
+
+```catala
+#[test]
+declaration scope TesteDeducaoExportada:
+  internal declaracao content Irs_2025.Declaracao
+  output deducao content money
+scope TesteDeducaoExportada:
+  definition declaracao equals output of Irs_2025.Declaracao with {
+    -- ano: 2025 -- residente: true -- apenas_regime_geral_a_h: true
+    -- apenas_creditos_implementados: true -- titulares_integrais: true
+    -- conjunta: false -- elegivel_conjunta: false -- separada: false -- monoparental: false
+    -- titulares: [Irs_2025.Titular {
+      -- dependente: false -- bruto_a: $20,000 -- bruto_h: $0
+      -- contribuicoes_a: $0 -- indemnizacoes: $0 -- sindicato_a: $0 -- ordens: $0
+      -- contribuicoes_h: $0 -- sindicato_h: $0 -- pensoes_elegiveis: true }]
+    -- dependentes: [] -- ascendentes: 0 -- ascendentes_partilhados: 0
+    -- despesas: Irs_2025.Despesas {
+      -- gerais: $1,000 -- saude: $0 -- educacao: $0 -- rendas_estudante: $0
+      -- rendas: $0 -- juros: $0 -- iva_servicos: $0 -- iva_transportes: $0
+      -- iva_medicamentos_veterinarios: $0 -- iva_publicacoes: $0 -- iva_desporto: $0 }
+    -- consignar_iva: false -- retencoes: $0 -- pagamentos_por_conta: $0
+  }
+  definition deducao equals declaracao.deducao_utilizada
+  assertion (deducao = $250)
+```
