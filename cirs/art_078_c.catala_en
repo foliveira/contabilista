@@ -1,0 +1,46 @@
+> Module Art_078_c
+> Using Apoio
+
+# Artigo 78.º-C: Dedução de despesas de saúde
+
+Source: [AT](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs78c.aspx).
+2025 wording; DL 49/2025 changes the procedural communication deadline only.
+
+Inputs are eligible amounts allocated to this return under art. 78, with
+reimbursements removed. Eligibility includes qualifying providers, insurance
+covering health risks exclusively, prescriptions for normal-rate VAT expenses,
+and the communication/documentation requirements of n.os 1–5/7/8. Those facts
+are determined by the caller, not by this arithmetic scope. Do not count
+insurance premiums or expenses twice. `separada` is married separate filing.
+
+```catala-metadata
+declaration scope Saude:
+  input ano content integer
+  input despesas_elegiveis_liquidas content money
+  input separada condition
+  output deducao content money
+```
+
+## N.º 1 (introductory rule)
+
+1 - À coleta do IRS devido pelos sujeitos passivos é dedutível um montante
+correspondente a 15 % do valor suportado a título de despesas de saúde por
+qualquer membro do agregado familiar, com o limite global de (euro) 1 000:
+
+Note: alíneas a)–d) specify eligible invoices, insurance and prescriptions;
+those are input qualifications, not additional rates.
+
+## N.º 6
+
+6 - A dedução prevista no n.º 1 não abrange a parte das despesas no mesmo
+referida que tenha sido comparticipada por seguradoras, associações mutualistas
+ou instituições sem fins lucrativos que tenham por objeto a prestação de
+cuidados de saúde.
+
+```catala
+scope Saude:
+  assertion (ano = 2025)
+  assertion (despesas_elegiveis_liquidas >= $0)
+  definition deducao equals Apoio.deducao_limitada of despesas_elegiveis_liquidas,
+    15%, (Apoio.limite_agregado of $1,000, separada)
+```

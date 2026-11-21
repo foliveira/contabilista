@@ -1,0 +1,193 @@
+> Using Irs_2025
+> Using Art_078_a
+
+# Public composition: hand-built synthetic regression cases, not AT results
+
+```catala
+#[test]
+declaration scope TesteDeclaracao0:
+  output resultado content Irs_2025.Declaracao
+scope TesteDeclaracao0:
+  definition resultado equals output of Irs_2025.Declaracao with {
+    -- ano: 2025
+    -- residente: true
+    -- apenas_regime_geral_a_h: true
+    -- apenas_creditos_implementados: true
+    -- titulares_integrais: true
+    -- conjunta: false
+    -- elegivel_conjunta: true
+    -- separada: false
+    -- monoparental: false
+    -- ascendentes: 0
+    -- ascendentes_partilhados: 0
+    -- consignar_iva: false
+    -- titulares: [Irs_2025.Titular { -- dependente: false -- bruto_a: $20000.00 -- bruto_h: $0.00 -- contribuicoes_a: $0.00 -- indemnizacoes: $0.00 -- sindicato_a: $0.00 -- ordens: $0.00 -- contribuicoes_h: $0.00 -- sindicato_h: $0.00 -- pensoes_elegiveis: true }]
+    -- dependentes: []
+    -- despesas: Irs_2025.Despesas { -- gerais: $1000.00 -- saude: $1000.00 -- educacao: $1000.00 -- rendas_estudante: $0.00 -- rendas: $1000.00 -- juros: $0.00 -- iva_servicos: $100.00 -- iva_transportes: $0.00 -- iva_medicamentos_veterinarios: $0.00 -- iva_publicacoes: $0.00 -- iva_desporto: $0.00 }
+    -- retencoes: $2000.00
+    -- pagamentos_por_conta: $0.00
+  }
+  assertion (resultado.rendimento_coletavel = $15,537.85 and resultado.imposto_devido = $1,524.73 and resultado.reembolso = $475.27)
+```
+
+```catala
+#[test]
+declaration scope TesteDeclaracao1:
+  output resultado content Irs_2025.Declaracao
+scope TesteDeclaracao1:
+  definition resultado equals output of Irs_2025.Declaracao with {
+    -- ano: 2025
+    -- residente: true
+    -- apenas_regime_geral_a_h: true
+    -- apenas_creditos_implementados: true
+    -- titulares_integrais: true
+    -- conjunta: true
+    -- elegivel_conjunta: true
+    -- separada: false
+    -- monoparental: false
+    -- ascendentes: 0
+    -- ascendentes_partilhados: 0
+    -- consignar_iva: false
+    -- titulares: [Irs_2025.Titular { -- dependente: false -- bruto_a: $20000.00 -- bruto_h: $0.00 -- contribuicoes_a: $0.00 -- indemnizacoes: $0.00 -- sindicato_a: $0.00 -- ordens: $0.00 -- contribuicoes_h: $0.00 -- sindicato_h: $0.00 -- pensoes_elegiveis: true }; Irs_2025.Titular { -- dependente: false -- bruto_a: $0.00 -- bruto_h: $20000.00 -- contribuicoes_a: $0.00 -- indemnizacoes: $0.00 -- sindicato_a: $0.00 -- ordens: $0.00 -- contribuicoes_h: $0.00 -- sindicato_h: $0.00 -- pensoes_elegiveis: true }]
+    -- dependentes: []
+    -- despesas: Irs_2025.Despesas { -- gerais: $1000.00 -- saude: $1000.00 -- educacao: $1000.00 -- rendas_estudante: $0.00 -- rendas: $1000.00 -- juros: $0.00 -- iva_servicos: $100.00 -- iva_transportes: $0.00 -- iva_medicamentos_veterinarios: $0.00 -- iva_publicacoes: $0.00 -- iva_desporto: $0.00 }
+    -- retencoes: $3000.00
+    -- pagamentos_por_conta: $0.00
+  }
+  assertion (resultado.rendimento_coletavel = $31,075.70 and resultado.imposto_devido = $3,814.46 and resultado.a_pagar = $814.46)
+```
+
+```catala
+#[test]
+declaration scope TesteDeclaracao2:
+  output resultado content Irs_2025.Declaracao
+scope TesteDeclaracao2:
+  definition resultado equals output of Irs_2025.Declaracao with {
+    -- ano: 2025
+    -- residente: true
+    -- apenas_regime_geral_a_h: true
+    -- apenas_creditos_implementados: true
+    -- titulares_integrais: true
+    -- conjunta: false
+    -- elegivel_conjunta: true
+    -- separada: false
+    -- monoparental: false
+    -- ascendentes: 0
+    -- ascendentes_partilhados: 0
+    -- consignar_iva: false
+    -- titulares: [Irs_2025.Titular { -- dependente: false -- bruto_a: $6500.00 -- bruto_h: $6500.00 -- contribuicoes_a: $0.00 -- indemnizacoes: $0.00 -- sindicato_a: $0.00 -- ordens: $0.00 -- contribuicoes_h: $0.00 -- sindicato_h: $0.00 -- pensoes_elegiveis: true }]
+    -- dependentes: []
+    -- despesas: Irs_2025.Despesas { -- gerais: $0.00 -- saude: $0.00 -- educacao: $0.00 -- rendas_estudante: $0.00 -- rendas: $0.00 -- juros: $0.00 -- iva_servicos: $0.00 -- iva_transportes: $0.00 -- iva_medicamentos_veterinarios: $0.00 -- iva_publicacoes: $0.00 -- iva_desporto: $0.00 }
+    -- retencoes: $0.00
+    -- pagamentos_por_conta: $0.00
+  }
+  assertion (number of resultado.calculos_titulares = 1 and resultado.abatimento = $0 and resultado.rendimento_coletavel = $4,075.70 and resultado.coleta_geral = $509.46)
+```
+
+```catala
+#[test]
+declaration scope TesteDeclaracao3:
+  output resultado content Irs_2025.Declaracao
+scope TesteDeclaracao3:
+  definition resultado equals output of Irs_2025.Declaracao with {
+    -- ano: 2025
+    -- residente: true
+    -- apenas_regime_geral_a_h: true
+    -- apenas_creditos_implementados: true
+    -- titulares_integrais: true
+    -- conjunta: false
+    -- elegivel_conjunta: true
+    -- separada: false
+    -- monoparental: false
+    -- ascendentes: 0
+    -- ascendentes_partilhados: 0
+    -- consignar_iva: false
+    -- titulares: [Irs_2025.Titular { -- dependente: false -- bruto_a: $7000.00 -- bruto_h: $0.00 -- contribuicoes_a: $0.00 -- indemnizacoes: $0.00 -- sindicato_a: $0.00 -- ordens: $0.00 -- contribuicoes_h: $0.00 -- sindicato_h: $0.00 -- pensoes_elegiveis: true }]
+    -- dependentes: []
+    -- despesas: Irs_2025.Despesas { -- gerais: $0.00 -- saude: $0.00 -- educacao: $0.00 -- rendas_estudante: $0.00 -- rendas: $0.00 -- juros: $0.00 -- iva_servicos: $0.00 -- iva_transportes: $0.00 -- iva_medicamentos_veterinarios: $0.00 -- iva_publicacoes: $0.00 -- iva_desporto: $0.00 }
+    -- retencoes: $0.00
+    -- pagamentos_por_conta: $0.00
+  }
+  assertion (resultado.abatimento = $2,537.85 and resultado.rendimento_coletavel = $0 and resultado.imposto_devido = $0)
+```
+
+```catala
+#[test]
+declaration scope TesteDeclaracao4:
+  output resultado content Irs_2025.Declaracao
+scope TesteDeclaracao4:
+  definition resultado equals output of Irs_2025.Declaracao with {
+    -- ano: 2025
+    -- residente: true
+    -- apenas_regime_geral_a_h: true
+    -- apenas_creditos_implementados: true
+    -- titulares_integrais: true
+    -- conjunta: true
+    -- elegivel_conjunta: true
+    -- separada: false
+    -- monoparental: false
+    -- ascendentes: 0
+    -- ascendentes_partilhados: 0
+    -- consignar_iva: false
+    -- titulares: [Irs_2025.Titular { -- dependente: false -- bruto_a: $20000.00 -- bruto_h: $0.00 -- contribuicoes_a: $0.00 -- indemnizacoes: $0.00 -- sindicato_a: $0.00 -- ordens: $0.00 -- contribuicoes_h: $0.00 -- sindicato_h: $0.00 -- pensoes_elegiveis: true }; Irs_2025.Titular { -- dependente: false -- bruto_a: $0.00 -- bruto_h: $0.00 -- contribuicoes_a: $0.00 -- indemnizacoes: $0.00 -- sindicato_a: $0.00 -- ordens: $0.00 -- contribuicoes_h: $0.00 -- sindicato_h: $0.00 -- pensoes_elegiveis: true }]
+    -- dependentes: []
+    -- despesas: Irs_2025.Despesas { -- gerais: $0.00 -- saude: $0.00 -- educacao: $0.00 -- rendas_estudante: $0.00 -- rendas: $0.00 -- juros: $0.00 -- iva_servicos: $0.00 -- iva_transportes: $0.00 -- iva_medicamentos_veterinarios: $0.00 -- iva_publicacoes: $0.00 -- iva_desporto: $0.00 }
+    -- retencoes: $0.00
+    -- pagamentos_por_conta: $0.00
+  }
+  assertion (resultado.rendimento_coletavel = $15,537.85 and resultado.coleta_geral = $1,942.24)
+```
+
+```catala
+#[test]
+declaration scope TesteDeclaracao5:
+  output resultado content Irs_2025.Declaracao
+scope TesteDeclaracao5:
+  definition resultado equals output of Irs_2025.Declaracao with {
+    -- ano: 2025
+    -- residente: true
+    -- apenas_regime_geral_a_h: true
+    -- apenas_creditos_implementados: true
+    -- titulares_integrais: true
+    -- conjunta: false
+    -- elegivel_conjunta: true
+    -- separada: true
+    -- monoparental: false
+    -- ascendentes: 0
+    -- ascendentes_partilhados: 0
+    -- consignar_iva: false
+    -- titulares: [Irs_2025.Titular { -- dependente: false -- bruto_a: $20000.00 -- bruto_h: $0.00 -- contribuicoes_a: $0.00 -- indemnizacoes: $0.00 -- sindicato_a: $0.00 -- ordens: $0.00 -- contribuicoes_h: $0.00 -- sindicato_h: $0.00 -- pensoes_elegiveis: true }]
+    -- dependentes: [Art_078_a.Dependente { -- idade: 2 -- partilhado: true }]
+    -- despesas: Irs_2025.Despesas { -- gerais: $1000.00 -- saude: $10000.00 -- educacao: $4000.00 -- rendas_estudante: $0.00 -- rendas: $20000.00 -- juros: $0.00 -- iva_servicos: $0.00 -- iva_transportes: $1000.00 -- iva_medicamentos_veterinarios: $0.00 -- iva_publicacoes: $0.00 -- iva_desporto: $0.00 }
+    -- retencoes: $0.00
+    -- pagamentos_por_conta: $0.00
+  }
+  assertion (resultado.deducao_utilizada <= resultado.coleta_geral and resultado.reembolso = $0)
+```
+
+```catala
+#[test]
+declaration scope TesteDeclaracao6:
+  output resultado content Irs_2025.Declaracao
+scope TesteDeclaracao6:
+  definition resultado equals output of Irs_2025.Declaracao with {
+    -- ano: 2025
+    -- residente: true
+    -- apenas_regime_geral_a_h: true
+    -- apenas_creditos_implementados: true
+    -- titulares_integrais: true
+    -- conjunta: false
+    -- elegivel_conjunta: true
+    -- separada: false
+    -- monoparental: false
+    -- ascendentes: 0
+    -- ascendentes_partilhados: 0
+    -- consignar_iva: false
+    -- titulares: [Irs_2025.Titular { -- dependente: false -- bruto_a: $20000.00 -- bruto_h: $0.00 -- contribuicoes_a: $0.00 -- indemnizacoes: $0.00 -- sindicato_a: $0.00 -- ordens: $0.00 -- contribuicoes_h: $0.00 -- sindicato_h: $0.00 -- pensoes_elegiveis: true }; Irs_2025.Titular { -- dependente: true -- bruto_a: $0.00 -- bruto_h: $13000.00 -- contribuicoes_a: $0.00 -- indemnizacoes: $0.00 -- sindicato_a: $0.00 -- ordens: $0.00 -- contribuicoes_h: $0.00 -- sindicato_h: $0.00 -- pensoes_elegiveis: true }]
+    -- dependentes: [Art_078_a.Dependente { -- idade: 20 -- partilhado: false }]
+    -- despesas: Irs_2025.Despesas { -- gerais: $0.00 -- saude: $0.00 -- educacao: $0.00 -- rendas_estudante: $0.00 -- rendas: $0.00 -- juros: $0.00 -- iva_servicos: $0.00 -- iva_transportes: $0.00 -- iva_medicamentos_veterinarios: $0.00 -- iva_publicacoes: $0.00 -- iva_desporto: $0.00 }
+    -- retencoes: $0.00
+    -- pagamentos_por_conta: $0.00
+  }
+  assertion (number of resultado.calculos_titulares = 2 and resultado.rendimento_coletavel = $24,075.70)
+```

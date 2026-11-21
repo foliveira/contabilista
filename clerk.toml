@@ -3,6 +3,6 @@ include_dirs = ["cirs", "tests"]
 
 [[target]]
 name = "irs"
-modules = ["Art_068"]
+modules = ["Art_022", "Art_025", "Art_053", "Art_068", "Art_068_a", "Art_069", "Art_070", "Apoio", "Art_078", "Art_078_a", "Art_078_b", "Art_078_c", "Art_078_d", "Art_078_e", "Art_078_f", "Irs_2025"]
 tests = ["tests"]
 backends = ["ocaml"]

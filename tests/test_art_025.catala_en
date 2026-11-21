@@ -1,0 +1,59 @@
+> Using Art_025
+
+# Tests: artigo 25.º do CIRS, 2025
+
+The base is 522.50 × 8.54 = 4,462.15; the professional-dues ceiling is
+522.50 × 9 = 4,702.50. Each row is one holder, with eligible expenses only.
+Cases cover income and contribution thresholds, professional dues (including
+competition with mandatory contributions), indemnities, union dues below,
+at and above the 1% ceiling, fractional cents, and the gross-income cap.
+
+```catala
+declaration structure Caso:
+  data bruto content money
+  data contribuicoes content money
+  data indemnizacoes content money
+  data sindicato content money
+  data ordens content money
+  data deducao content money
+
+#[test]
+declaration scope TesteDeducaoTrabalho2025:
+  internal casos content list of Caso
+  output calculado content list of Art_025.DeducaoTrabalho
+
+scope TesteDeducaoTrabalho2025:
+  definition casos equals [
+    Caso { -- bruto: $0 -- contribuicoes: $0 -- indemnizacoes: $0 -- sindicato: $0 -- ordens: $0 -- deducao: $0 };
+    Caso { -- bruto: $4,462.14 -- contribuicoes: $0 -- indemnizacoes: $0 -- sindicato: $0 -- ordens: $0 -- deducao: $4,462.14 };
+    Caso { -- bruto: $4,462.15 -- contribuicoes: $0 -- indemnizacoes: $0 -- sindicato: $0 -- ordens: $0 -- deducao: $4,462.15 };
+    Caso { -- bruto: $4,462.16 -- contribuicoes: $0 -- indemnizacoes: $0 -- sindicato: $0 -- ordens: $0 -- deducao: $4,462.15 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $4,462.14 -- indemnizacoes: $0 -- sindicato: $0 -- ordens: $0 -- deducao: $4,462.15 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $4,462.15 -- indemnizacoes: $0 -- sindicato: $0 -- ordens: $0 -- deducao: $4,462.15 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $4,462.16 -- indemnizacoes: $0 -- sindicato: $0 -- ordens: $0 -- deducao: $4,462.16 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $0 -- indemnizacoes: $0 -- sindicato: $0 -- ordens: $100 -- deducao: $4,562.15 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $0 -- indemnizacoes: $0 -- sindicato: $0 -- ordens: $240.35 -- deducao: $4,702.50 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $0 -- indemnizacoes: $0 -- sindicato: $0 -- ordens: $300 -- deducao: $4,702.50 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $4,600 -- indemnizacoes: $0 -- sindicato: $0 -- ordens: $300 -- deducao: $4,702.50 };
+    Caso { -- bruto: $50,000 -- contribuicoes: $5,500 -- indemnizacoes: $0 -- sindicato: $0 -- ordens: $300 -- deducao: $5,500 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $0 -- indemnizacoes: $1,000 -- sindicato: $0 -- ordens: $0 -- deducao: $5,462.15 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $0 -- indemnizacoes: $0 -- sindicato: $100 -- ordens: $0 -- deducao: $4,662.15 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $0 -- indemnizacoes: $0 -- sindicato: $200 -- ordens: $0 -- deducao: $4,862.15 };
+    Caso { -- bruto: $20,000 -- contribuicoes: $0 -- indemnizacoes: $0 -- sindicato: $201 -- ordens: $0 -- deducao: $4,862.15 };
+    Caso { -- bruto: $10,000.25 -- contribuicoes: $0 -- indemnizacoes: $0 -- sindicato: $200 -- ordens: $0 -- deducao: $4,662.16 };
+    Caso { -- bruto: $5,000 -- contribuicoes: $0 -- indemnizacoes: $1,000 -- sindicato: $50 -- ordens: $300 -- deducao: $5,000 }
+  ]
+
+  definition calculado equals map each c among casos to
+    output of Art_025.DeducaoTrabalho with {
+      -- ano: 2025
+      -- rendimento_bruto: c.bruto
+      -- contribuicoes_obrigatorias: c.contribuicoes
+      -- indemnizacoes_elegiveis: c.indemnizacoes
+      -- quotizacoes_sindicais_elegiveis: c.sindicato
+      -- quotizacoes_ordens_elegiveis: c.ordens
+    }
+
+  assertion (for all (c, v) among (casos, calculado) we have
+    v.deducao = c.deducao and v.rendimento_liquido = c.bruto - c.deducao)
+```

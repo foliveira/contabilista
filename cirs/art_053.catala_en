@@ -1,0 +1,125 @@
+> Module Art_053
+> Using Art_025
+
+# Código do IRS
+
+## Capítulo II: Determinação do rendimento coletável
+
+### Artigo 53.º: Pensões
+
+Note: wording applicable to 2025, including Lei n.º 45-A/2024, de 31 de
+ dezembro (n.º 1 and revocation of n.º 8), and Lei n.º 82/2023, de 29 de
+ dezembro (n.º 4 a)). Sources:
+
+- [Lei n.º 45-A/2024](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Lei_45_A_2024.pdf)
+- [AT, artigo 53.º](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs53.aspx)
+
+One call is for one holder's annual pension income. Eligible union dues
+exclude the benefits listed below. Pension classification is an input.
+Non-qualifying temporary/life annuities are outside milestone 1 and must not
+be included in rendimento_bruto; their treatment also needs art. 54.
+
+```catala-metadata
+declaration scope DeducaoPensoes:
+  input ano content integer
+  input rendimento_bruto content money
+  input contribuicoes_obrigatorias content money
+  input quotizacoes_sindicais_elegiveis content money
+  input apenas_pensoes_elegiveis condition
+  internal limites content Art_025.LimitesDeducao
+  internal deducao_base content money
+  internal deducao_sindical content money
+  internal deducao_contribuicoes content money
+  output deducao content money
+  output rendimento_liquido content money
+```
+
+#### N.º 1
+
+1 - Aos rendimentos brutos da categoria H de valor anual igual ou inferior
+ao previsto na alínea a) do n.º 1 do artigo 25.º deduz-se, até à sua
+concorrência, a totalidade do seu quantitativo por cada titular que os tenha
+auferido.
+
+#### N.º 2
+
+2 - Se o rendimento anual, por titular, for superior ao valor referido no
+número anterior, a dedução é igual ao montante nele fixado.
+
+```catala
+scope DeducaoPensoes:
+  definition limites equals output of Art_025.LimitesDeducao with { -- ano: ano }
+  assertion (rendimento_bruto >= $0)
+  assertion (contribuicoes_obrigatorias >= $0)
+  assertion (quotizacoes_sindicais_elegiveis >= $0)
+
+  definition deducao_base equals
+    if rendimento_bruto <= limites.deducao_base
+    then rendimento_bruto
+    else limites.deducao_base
+```
+
+#### N.º 3
+
+3 - (Revogado.)
+
+#### N.º 4
+
+4 - Aos rendimentos brutos da categoria H são ainda deduzidas:
+
+a) As quotizações sindicais, na parte em que não constituam contrapartida de
+benefícios relativos à saúde, educação, apoio à terceira idade, habitação,
+seguros ou segurança social e desde que não excedam, em relação a cada
+sujeito passivo, 1 % do rendimento bruto desta categoria, sendo acrescidas
+em 100 %;
+
+```catala
+scope DeducaoPensoes:
+  definition deducao_sindical equals
+    money of (2.0 * (if decimal of quotizacoes_sindicais_elegiveis
+                     <= (decimal of rendimento_bruto) * 1%
+                  then decimal of quotizacoes_sindicais_elegiveis
+                  else (decimal of rendimento_bruto) * 1%))
+```
+
+b) As contribuições obrigatórias para regimes de proteção social e para
+subsistemas legais de saúde, na parte que exceda o montante da dedução
+prevista no n.º 1.
+
+Note: deductions cannot produce negative net pension income. There is no
+income-dependent taper in 2025 (the former n.º 8 was revoked).
+
+```catala
+scope DeducaoPensoes:
+  definition deducao_contribuicoes equals
+    if contribuicoes_obrigatorias > limites.deducao_base
+    then contribuicoes_obrigatorias - limites.deducao_base
+    else $0
+
+  definition deducao equals
+    let total equals deducao_base + deducao_sindical + deducao_contribuicoes in
+    if total <= rendimento_bruto then total else rendimento_bruto
+
+  definition rendimento_liquido equals rendimento_bruto - deducao
+```
+
+#### N.os 5 e 6
+
+5 - (Revogado.)
+
+6 - (Revogado.)
+
+#### N.º 7
+
+7 - Excluem-se do disposto no n.º 1 as rendas temporárias e vitalícias que
+não se destinem ao pagamento de pensões enquadráveis nas alíneas a), b) ou
+c) do n.º 1 do artigo 11.º.
+
+```catala
+scope DeducaoPensoes:
+  assertion apenas_pensoes_elegiveis
+```
+
+#### N.º 8
+
+8 - (Revogado.)

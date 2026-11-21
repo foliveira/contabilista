@@ -1,0 +1,113 @@
+> Using Art_025
+> Using Art_053
+> Using Art_022
+> Using Art_070
+> Using Art_068
+> Using Art_068_a
+> Using Art_069
+> Using Art_078_a
+> Using Art_078_b
+> Using Art_078_c
+> Using Art_078_d
+> Using Art_078_e
+> Using Art_078_f
+> Using Art_078
+
+# Full 2025 calculation: ordinary A/H, joint and individual
+
+A holder earns €20,000, deducts €4,462.15. In the joint variant a second holder
+has €20,000 of pensions, also deducting €4,462.15. Art. 70 excludes both variants
+because gross exceeds €16,093 per taxpayer. No solidarity surcharge applies.
+Taxable income is €15,537.85 / €31,075.70, general-rate coleta €2,389.73 /
+€4,779.46. Household expenses (same in both variants) give these credits:
+family €0, general €250/€350, health €150, education €300, housing €150,
+invoice VAT €15. The overall expense cap does not bind. Thus tax due is
+€1,524.73 / €3,814.46. Withholding €2,000 / €3,000 gives refund €475.27 /
+payment €814.46. These are hand-calculated, NOT simulator-verified figures.
+
+```catala
+declaration structure Variante:
+  data conjunta content boolean
+  data sujeitos content integer
+  data bruto_declaracao content money
+  data bruto_h content money
+  data retencoes content money
+  data rc content money
+  data devido content money
+  data pagar content money
+  data reembolso content money
+
+#[test]
+declaration scope TesteIRS2025:
+  internal variantes content list of Variante
+  output resultados content list of Art_078.Liquidacao
+scope TesteIRS2025:
+  definition variantes equals [
+    Variante { -- conjunta: false -- sujeitos: 1 -- bruto_declaracao: $20,000 -- bruto_h: $0
+      -- retencoes: $2,000 -- rc: $15,537.85 -- devido: $1,524.73 -- pagar: $0 -- reembolso: $475.27 };
+    Variante { -- conjunta: true -- sujeitos: 2 -- bruto_declaracao: $40,000 -- bruto_h: $20,000
+      -- retencoes: $3,000 -- rc: $31,075.70 -- devido: $3,814.46 -- pagar: $814.46 -- reembolso: $0 }
+  ]
+  definition resultados equals map each v among variantes to
+    let trabalho equals output of Art_025.DeducaoTrabalho with {
+      -- ano: 2025 -- rendimento_bruto: $20,000 -- contribuicoes_obrigatorias: $2,200
+      -- indemnizacoes_elegiveis: $0 -- quotizacoes_sindicais_elegiveis: $0 -- quotizacoes_ordens_elegiveis: $0
+    } in
+    let pensoes equals output of Art_053.DeducaoPensoes with {
+      -- ano: 2025 -- rendimento_bruto: v.bruto_h -- contribuicoes_obrigatorias: $0
+      -- quotizacoes_sindicais_elegiveis: $0 -- apenas_pensoes_elegiveis: true
+    } in
+    let minimo_a equals output of Art_070.MinimoExistencia with {
+      -- ano: 2025 -- numero_sujeitos_passivos: v.sujeitos
+      -- rendimentos_brutos_declaracao: v.bruto_declaracao -- rendimentos_taxas_liberatorias: $0
+      -- rendimento_bruto: $20,000 -- deducoes_especificas: trabalho.deducao
+      -- dependente: false -- rendimento_predominante_elegivel: true
+    } in
+    let minimo_h equals output of Art_070.MinimoExistencia with {
+      -- ano: 2025 -- numero_sujeitos_passivos: v.sujeitos
+      -- rendimentos_brutos_declaracao: v.bruto_declaracao -- rendimentos_taxas_liberatorias: $0
+      -- rendimento_bruto: v.bruto_h -- deducoes_especificas: pensoes.deducao
+      -- dependente: false -- rendimento_predominante_elegivel: true
+    } in
+    let englobamento equals output of Art_022.Englobamento with {
+      -- ano: 2025 -- apenas_residentes: true -- apenas_regime_geral_a_h: true
+      -- rendimentos_isentos_com_englobamento: $0
+      -- titulares: [
+        Art_022.RendimentosTitular { -- rendimento_liquido_a: trabalho.rendimento_liquido -- rendimento_liquido_h: $0 };
+        Art_022.RendimentosTitular { -- rendimento_liquido_a: $0 -- rendimento_liquido_h: pensoes.rendimento_liquido }
+      ]
+    } in
+    let rc equals englobamento.rendimento_coletavel - minimo_a.abatimento - minimo_h.abatimento in
+    let geral equals if v.conjunta
+      then (output of Art_069.TributacaoConjunta with {
+        -- ano: 2025 -- opcao_tributacao_conjunta: true -- rendimento_coletavel: rc }).imposto
+      else (output of Art_068.TaxasGerais with { -- ano: 2025 -- rendimento_coletavel: rc }).imposto in
+    let adicional equals output of Art_068_a.TaxaSolidariedade with {
+      -- ano: 2025 -- tributacao_conjunta: v.conjunta -- rendimento_coletavel: rc } in
+    let familia equals output of Art_078_a.Familia with {
+      -- ano: 2025 -- dependentes: [] -- ascendentes: 0 -- ascendentes_partilhados: 0 } in
+    let gerais equals output of Art_078_b.DespesasGerais with {
+      -- ano: 2025 -- despesas_elegiveis: $1,000 -- numero_sujeitos_passivos: v.sujeitos -- monoparental: false } in
+    let saude equals output of Art_078_c.Saude with {
+      -- ano: 2025 -- despesas_elegiveis_liquidas: $1,000 -- separada: false } in
+    let educacao equals output of Art_078_d.Educacao with {
+      -- ano: 2025 -- despesas_elegiveis: $1,000 -- rendas_estudante_elegiveis: $0
+      -- separada: false -- apenas_regime_cirs: true } in
+    let imoveis equals output of Art_078_e.Imoveis with {
+      -- ano: 2025 -- rendas_elegiveis: $1,000 -- juros_elegiveis: $0
+      -- rendimento_coletavel: rc -- conjunta: v.conjunta -- separada: false -- apenas_regime_cirs: true } in
+    let fatura equals output of Art_078_f.Fatura with {
+      -- ano: 2025 -- iva_servicos: $100 -- iva_transportes: $0
+      -- iva_medicamentos_veterinarios: $0 -- iva_publicacoes: $0 -- iva_desporto: $0
+      -- separada: false -- consignar: false } in
+    output of Art_078.Liquidacao with {
+      -- ano: 2025 -- residente: true -- apenas_creditos_implementados: true
+      -- conjunta: v.conjunta -- separada: false -- dependentes: 0
+      -- rendimento_coletavel: rc -- coleta: geral + adicional.imposto
+      -- descendentes_ascendentes: familia.deducao -- gerais: gerais.deducao
+      -- saude: saude.deducao -- educacao: educacao.deducao -- imoveis: imoveis.deducao -- fatura: fatura.deducao
+      -- retencoes: v.retencoes -- pagamentos_por_conta: $0
+    }
+  assertion (for all (v, r) among (variantes, resultados) we have
+    r.imposto_devido = v.devido and r.a_pagar = v.pagar and r.reembolso = v.reembolso)
+```

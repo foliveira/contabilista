@@ -1,0 +1,125 @@
+> Module Art_068_a
+
+# Código do IRS
+
+## Capítulo III: Taxas
+
+### Artigo 68.º-A: Taxa adicional de solidariedade
+
+Sources: [AT, artigo 68.º-A](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/cirs_rep/Pages/irs68a.aspx)
+and [Lei n.º 7-A/2016, de 30 de março](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/legislacao/diplomas_legislativos/Documents/Lei_7_A_2016.pdf).
+The AT amendment history lists March 2016 as the last amendment; this is the
+wording applicable to 2025. N.º 3 and the revocations below reflect that law.
+
+Supply taxable income, after category deductions, not gross income. For joint
+filing this is the full household amount (e.g. the output of art. 22), NOT the
+quotient already calculated by art. 69. `tributacao_conjunta` attests a valid
+joint-filing election; false selects individual/separate taxation. Eligibility
+and allocation to the return remain caller responsibilities. This scope covers
+the ordinary resident A/H regime, not special regimes or exempt income that
+must be included to determine the rate.
+
+The output `imposto` is ONLY the solidarity surcharge. Add it to the general-rate
+coleta from art. 68 or 69; it is not a replacement for those articles, nor the
+final tax payable after all adjustments and credits.
+
+Rounding convention (provisional, as in art. 69): round the joint quotient to
+cents, calculate the two tax portions with exact decimal arithmetic, round their
+sum once to cents, then double for joint filing. Catala rounds half away from
+zero. The law does not specify these intermediate rounding steps; see PLAN.md
+for the outstanding AT comparison. Tests pin this convention, not AT behaviour.
+
+```catala-metadata
+declaration scope TaxaSolidariedade:
+  input ano content integer
+  input rendimento_coletavel content money
+  input tributacao_conjunta condition
+  internal limite_inferior content money
+  internal limite_superior content money
+  internal taxa_inferior content decimal
+  internal taxa_superior content decimal
+  internal imposto_quociente content money
+  output quociente content money
+  output imposto content money
+```
+
+#### N.º 1
+
+1 - Sem prejuízo do disposto no artigo 68.º, ao quantitativo do rendimento
+coletável superior a (euro) 80 000 incidem as taxas adicionais de solidariedade
+constantes da tabela seguinte:
+
+| Rendimento coletável (euros) | Taxa (percentagem) |
+|-----------------------------|-------------------|
+| De mais de 80 000 até 250 000 | 2,5 |
+| Superior a 250 000 | 5 |
+
+```catala
+scope TaxaSolidariedade:
+  assertion (ano = 2025)
+  assertion (rendimento_coletavel >= $0)
+
+  definition limite_inferior under condition ano = 2025
+    consequence equals $80,000
+  definition limite_superior under condition ano = 2025
+    consequence equals $250,000
+  definition taxa_inferior under condition ano = 2025
+    consequence equals 2.5%
+  definition taxa_superior under condition ano = 2025
+    consequence equals 5%
+
+  definition imposto_quociente under condition quociente <= limite_inferior
+    consequence equals $0
+
+  definition imposto_quociente
+    under condition quociente > limite_inferior and quociente <= limite_superior
+    consequence equals
+      money of ((decimal of (quociente - limite_inferior)) * taxa_inferior)
+```
+
+#### N.º 2
+
+2 - O quantitativo da parte do rendimento coletável que exceda (euro) 80 000,
+quando superior a (euro) 250 000, é dividido em duas partes: uma, igual a
+(euro) 170 000, à qual se aplica a taxa de 2,5 %; outra, igual ao rendimento
+coletável que exceda (euro) 250 000, à qual se aplica a taxa de 5 %.
+
+Note: the €250,000 threshold applies to taxable income, consistent with the
+table and the explicit second portion, not to income minus €80,000. The first
+portion is €250,000 − €80,000 = €170,000; the second is the excess over €250,000.
+
+```catala
+scope TaxaSolidariedade:
+  definition imposto_quociente under condition quociente > limite_superior
+    consequence equals money of (
+      (decimal of (limite_superior - limite_inferior)) * taxa_inferior
+      + (decimal of (quociente - limite_superior)) * taxa_superior
+    )
+```
+
+#### N.º 3
+
+3 - No caso de tributação conjunta, o procedimento referido nos números
+anteriores aplica-se a metade do rendimento coletável, sendo a coleta obtida
+pela multiplicação do resultado dessa operação por dois.
+
+```catala
+scope TaxaSolidariedade:
+  definition quociente equals
+    if tributacao_conjunta
+    then money of ((decimal of rendimento_coletavel) / 2.0)
+    else rendimento_coletavel
+
+  definition imposto equals
+    if tributacao_conjunta
+    then money of ((decimal of imposto_quociente) * 2.0)
+    else imposto_quociente
+```
+
+#### N.os 4 a 6
+
+4 - (Revogado pela Lei n.º 7-A/2016 de 30 de março)
+
+5 - (Revogado pela Lei n.º 7-A/2016 de 30 de março)
+
+6 - (Revogado pela Lei n.º 7-A/2016 de 30 de março)

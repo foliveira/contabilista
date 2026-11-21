@@ -1,0 +1,136 @@
+> Using Art_068_a
+> Using Art_022
+> Using Art_068
+> Using Art_069
+
+# Tests: artigo 68.º-A do CIRS, 2025
+
+## Hand-calculated values and boundaries
+
+Individual: €100,000 gives (100,000 − 80,000) × 2.5% = €500;
+€250,000 gives 170,000 × 2.5% = €4,250; €300,000 gives
+€4,250 + 50,000 × 5% = €6,750. No jump to 5% on the whole excess.
+
+Joint: apply those calculations to half the household taxable income and
+double the result. Thus the household thresholds are €160,000 and €500,000,
+and €600,000 gives 2 × €6,750 = €13,500. Odd-cent and half-cent cases pin
+the provisional intermediate rounding documented in the implementation.
+
+```catala
+declaration structure Caso:
+  data rendimento content money
+  data conjunta content boolean
+  data quociente content money
+  data imposto content money
+
+#[test]
+declaration scope TesteSolidariedade2025:
+  internal casos content list of Caso
+  output calculado content list of Art_068_a.TaxaSolidariedade
+
+scope TesteSolidariedade2025:
+  definition casos equals [
+    Caso { -- rendimento: $0 -- conjunta: false -- quociente: $0 -- imposto: $0 };
+    Caso { -- rendimento: $79,999.99 -- conjunta: false -- quociente: $79,999.99 -- imposto: $0 };
+    Caso { -- rendimento: $80,000 -- conjunta: false -- quociente: $80,000 -- imposto: $0 };
+    Caso { -- rendimento: $80,000.01 -- conjunta: false -- quociente: $80,000.01 -- imposto: $0 };
+    Caso { -- rendimento: $80,000.19 -- conjunta: false -- quociente: $80,000.19 -- imposto: $0 };
+    Caso { -- rendimento: $80,000.20 -- conjunta: false -- quociente: $80,000.20 -- imposto: $0.01 };
+    Caso { -- rendimento: $100,000 -- conjunta: false -- quociente: $100,000 -- imposto: $500 };
+    Caso { -- rendimento: $249,999.99 -- conjunta: false -- quociente: $249,999.99 -- imposto: $4,250 };
+    Caso { -- rendimento: $250,000 -- conjunta: false -- quociente: $250,000 -- imposto: $4,250 };
+    Caso { -- rendimento: $250,000.01 -- conjunta: false -- quociente: $250,000.01 -- imposto: $4,250 };
+    Caso { -- rendimento: $250,000.10 -- conjunta: false -- quociente: $250,000.10 -- imposto: $4,250.01 };
+    Caso { -- rendimento: $300,000 -- conjunta: false -- quociente: $300,000 -- imposto: $6,750 };
+    Caso { -- rendimento: $1,000,000 -- conjunta: false -- quociente: $1,000,000 -- imposto: $41,750 };
+    Caso { -- rendimento: $0 -- conjunta: true -- quociente: $0 -- imposto: $0 };
+    Caso { -- rendimento: $100,000 -- conjunta: true -- quociente: $50,000 -- imposto: $0 };
+    Caso { -- rendimento: $159,999.99 -- conjunta: true -- quociente: $80,000 -- imposto: $0 };
+    Caso { -- rendimento: $160,000 -- conjunta: true -- quociente: $80,000 -- imposto: $0 };
+    Caso { -- rendimento: $160,000.01 -- conjunta: true -- quociente: $80,000.01 -- imposto: $0 };
+    Caso { -- rendimento: $160,000.37 -- conjunta: true -- quociente: $80,000.19 -- imposto: $0 };
+    Caso { -- rendimento: $160,000.39 -- conjunta: true -- quociente: $80,000.20 -- imposto: $0.02 };
+    Caso { -- rendimento: $200,000 -- conjunta: true -- quociente: $100,000 -- imposto: $1,000 };
+    Caso { -- rendimento: $499,999.99 -- conjunta: true -- quociente: $250,000 -- imposto: $8,500 };
+    Caso { -- rendimento: $500,000 -- conjunta: true -- quociente: $250,000 -- imposto: $8,500 };
+    Caso { -- rendimento: $500,000.01 -- conjunta: true -- quociente: $250,000.01 -- imposto: $8,500 };
+    Caso { -- rendimento: $500,000.19 -- conjunta: true -- quociente: $250,000.10 -- imposto: $8,500.02 };
+    Caso { -- rendimento: $600,000 -- conjunta: true -- quociente: $300,000 -- imposto: $13,500 };
+    Caso { -- rendimento: $2,000,000 -- conjunta: true -- quociente: $1,000,000 -- imposto: $83,500 }
+  ]
+
+  definition calculado equals map each c among casos to
+    output of Art_068_a.TaxaSolidariedade with {
+      -- ano: 2025
+      -- rendimento_coletavel: c.rendimento
+      -- tributacao_conjunta: c.conjunta
+    }
+
+  assertion (for all (c, v) among (casos, calculado) we have
+    v.quociente = c.quociente and v.imposto = c.imposto)
+```
+
+## Integration: aggregate first, then add the two taxes
+
+These are already-deducted net A/H amounts, as required by article 22.
+Individual RC €100,000: article 68 €37,060.10 + solidarity €500 = €37,560.10.
+Joint RC €200,000: article 69 €74,120.20 + solidarity €1,000 = €75,120.20.
+Both tax scopes take the FULL article 22 output, avoiding a second division
+of the solidarity base. These totals precede further adjustments and credits.
+
+```catala
+#[test]
+declaration scope TesteIntegracaoSolidariedade2025:
+  internal individual content Art_022.Englobamento
+  internal conjunta content Art_022.Englobamento
+  internal geral_individual content Art_068.TaxasGerais
+  internal geral_conjunta content Art_069.TributacaoConjunta
+  internal adicional_individual content Art_068_a.TaxaSolidariedade
+  internal adicional_conjunta content Art_068_a.TaxaSolidariedade
+  output coleta_individual content money
+  output coleta_conjunta content money
+
+scope TesteIntegracaoSolidariedade2025:
+  definition individual equals output of Art_022.Englobamento with {
+    -- ano: 2025
+    -- apenas_residentes: true
+    -- apenas_regime_geral_a_h: true
+    -- rendimentos_isentos_com_englobamento: $0
+    -- titulares: [Art_022.RendimentosTitular {
+      -- rendimento_liquido_a: $100,000 -- rendimento_liquido_h: $0 }]
+  }
+  definition conjunta equals output of Art_022.Englobamento with {
+    -- ano: 2025
+    -- apenas_residentes: true
+    -- apenas_regime_geral_a_h: true
+    -- rendimentos_isentos_com_englobamento: $0
+    -- titulares: [
+      Art_022.RendimentosTitular { -- rendimento_liquido_a: $150,000 -- rendimento_liquido_h: $0 };
+      Art_022.RendimentosTitular { -- rendimento_liquido_a: $0 -- rendimento_liquido_h: $50,000 }
+    ]
+  }
+  definition geral_individual equals output of Art_068.TaxasGerais with {
+    -- ano: 2025 -- rendimento_coletavel: individual.rendimento_coletavel
+  }
+  definition geral_conjunta equals output of Art_069.TributacaoConjunta with {
+    -- ano: 2025 -- opcao_tributacao_conjunta: true
+    -- rendimento_coletavel: conjunta.rendimento_coletavel
+  }
+  definition adicional_individual equals output of Art_068_a.TaxaSolidariedade with {
+    -- ano: 2025 -- tributacao_conjunta: false
+    -- rendimento_coletavel: individual.rendimento_coletavel
+  }
+  definition adicional_conjunta equals output of Art_068_a.TaxaSolidariedade with {
+    -- ano: 2025 -- tributacao_conjunta: true
+    -- rendimento_coletavel: conjunta.rendimento_coletavel
+  }
+  definition coleta_individual equals geral_individual.imposto + adicional_individual.imposto
+  definition coleta_conjunta equals geral_conjunta.imposto + adicional_conjunta.imposto
+
+  assertion (individual.rendimento_coletavel = $100,000)
+  assertion (conjunta.rendimento_coletavel = $200,000)
+  assertion (adicional_individual.imposto = $500)
+  assertion (adicional_conjunta.imposto = $1,000)
+  assertion (coleta_individual = $37,560.10)
+  assertion (coleta_conjunta = $75,120.20)
+```
