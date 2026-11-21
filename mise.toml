@@ -1,0 +1,31 @@
+[tools]
+ninja = "1.13.2"
+opam = { version = "2.6.1", asset_pattern = "opam-*-{gnu_arch}-{os}" }
+
+# GMP headers/libraries may be installed under ~/.local on hosts without root.
+# Both catala and clerk are installed by opam in the shared 4.14.2 switch.
+[env]
+C_INCLUDE_PATH = "{{ env.HOME }}/.local/include"
+LIBRARY_PATH = "{{ env.HOME }}/.local/lib"
+LD_LIBRARY_PATH = "{{ env.HOME }}/.local/lib"
+
+[tasks.setup]
+description = "Set up a worktree using the host's shared OCaml/Catala toolchain"
+run = """
+set -eu
+if ! opam exec --switch=4.14.2 -- bash -c '
+  set -e
+  test "$(ocamlc -version)" = 4.14.2
+  test "$(catala --version)" = 1.3.0
+  test "$(clerk --version)" = 1.3.0
+'; then
+  echo 'Missing host toolchain: install OCaml 4.14.2 and opam package catala.1.3.0 (includes clerk).' >&2
+  echo 'This task reuses an existing host installation; it does not bootstrap a new machine.' >&2
+  exit 1
+fi
+echo 'Toolchain ready. Run mise run test.'
+"""
+
+[tasks.test]
+description = "Build and run the Catala tests (run mise run setup once first)"
+run = "opam exec --switch=4.14.2 -- clerk test"

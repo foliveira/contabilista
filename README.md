@@ -4,7 +4,7 @@ The Portuguese personal income tax code (Código do IRS) written as a program in
 
 Each file holds the text of one article of the law, in Portuguese, with the code for that article right under it. You can run the tax calculation, test it, and check each line of code against the law it comes from.
 
-## Status
+## Status of this repository
 
 For income earned in 2025, with tests:
 
@@ -47,7 +47,11 @@ eval $(opam env)
 opam update && opam install catala.1.3.0
 ```
 
-Then, in this folder, run all the tests:
+On a host with the shared OCaml 4.14.2 / Catala 1.3.0 switch already installed,
+`mise run setup` checks the toolchain and `mise run test` runs the Catala tests.
+The setup task does not bootstrap a new machine.
+
+Alternatively, with the toolchain on PATH, run the Catala tests directly:
 
 ```sh
 clerk test
